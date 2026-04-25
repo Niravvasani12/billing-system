@@ -1,0 +1,12 @@
+node_modules
+dist
+out
+build/*
+!.gitkeep
+*.log
+.env.local
+node_modules/
+release/
+dist/
+*.exe
+*.zip
