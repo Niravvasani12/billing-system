@@ -1,6 +1,16 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("billingAPI", {
+  app: {
+    getVersion: () => ipcRenderer.invoke("app:get-version"),
+    checkForUpdates: () => ipcRenderer.invoke("app:check-for-updates"),
+    installUpdate: () => ipcRenderer.invoke("app:install-update"),
+    onUpdateStatus: (callback) => {
+      const listener = (_, payload) => callback(payload);
+      ipcRenderer.on("app:update-status", listener);
+      return () => ipcRenderer.removeListener("app:update-status", listener);
+    },
+  },
   invoice: {
     list: () => ipcRenderer.invoke("invoice:list"),
     create: (payload) => ipcRenderer.invoke("invoice:create", payload),

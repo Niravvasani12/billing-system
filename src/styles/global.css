@@ -59,6 +59,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 14px;
 }
 .badge {
   padding: 6px 10px;
@@ -66,6 +67,39 @@ body {
   background: #ccfbf1;
   color: #0f766e;
   font-weight: 600;
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.app-version {
+  margin: 4px 0 0;
+  font-size: 12px;
+}
+.update-box {
+  border: 1px solid var(--border);
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 8px 10px;
+  min-width: 340px;
+}
+.update-text {
+  margin: 0;
+  font-size: 12px;
+  color: #374151;
+}
+.update-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+.update-btn {
+  font-size: 12px;
+  padding: 7px 11px;
+}
+.update-btn.secondary {
+  background: #0f766e;
 }
 .content {
   padding: 20px;
@@ -240,6 +274,21 @@ button.danger {
   .inv-logo-img {
     width: 90px;
     height: 90px;
+  }
+  .topbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .topbar-right {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .update-box {
+    min-width: 0;
+  }
+  .badge {
+    width: fit-content;
   }
 }
 
