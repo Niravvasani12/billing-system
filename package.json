@@ -1,6 +1,6 @@
 {
   "name": "billing-sys",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Desktop billing software with Electron + React + SQLite",
   "author": "Nirav Vasani",
   "main": "electron-main.js",
@@ -42,8 +42,8 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "YOUR_GITHUB_USERNAME",
-        "repo": "YOUR_REPO_NAME"
+        "owner": "Niravvasani12",
+        "repo": "billing-system"
       }
     ],
     "asar": true,
@@ -67,7 +67,7 @@
       "icon": "assets/icon.ico"
     },
     "nsis": {
-      "oneClick": true,
+      "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true
     }
