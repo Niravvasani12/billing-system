@@ -42,11 +42,26 @@ body {
   color: #fff;
   border-radius: 10px;
   padding: 10px;
-  text-align: center;
+  text-align: left;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 .nav-btn.active {
   background: #0d9488;
+}
+.nav-btn-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.nav-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
 }
 .workspace {
   display: flex;
@@ -77,6 +92,7 @@ body {
   font-size: 12px;
   color: #374151;
 }
+
 .update-actions {
   margin-top: 8px;
   display: flex;
@@ -546,12 +562,6 @@ button.danger {
     justify-content: stretch;
   }
 }
-.nav-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .icon {
   font-size: 16px;
 }

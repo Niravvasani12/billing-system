@@ -7,17 +7,20 @@ import Customers from "./pages/Customers";
 import Products from "./pages/Products";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import Update from "./pages/Update";
 import { useDispatch } from "react-redux";
 import { fetchCustomers } from "./store/slices/customerSlice";
 import { fetchProducts } from "./store/slices/productSlice";
 import { fetchInvoices } from "./store/slices/invoiceSlice";
 
 const pageMap = {
-  dashboard: Dashboard,
   billing: Billing,
   customers: Customers,
+  dashboard: Dashboard,
   products: Products,
-  reports: Reports
+  reports: Reports,
+  settings: Settings,
+  update: Update,
 };
 
 export default function App() {
@@ -66,19 +69,24 @@ export default function App() {
     await window.billingAPI.app.installUpdate();
   };
 
+  const showUpdateDot = ["available", "downloading", "downloaded"].includes(
+    updateState.status
+  );
+
   const ActivePage = useMemo(() => pageMap[activePage] || Dashboard, [activePage]);
 
   return (
     <div className="app-shell">
-      <Sidebar activePage={activePage} onChange={setActivePage} />
+      <Sidebar
+        activePage={activePage}
+        onChange={setActivePage}
+        showUpdateDot={showUpdateDot}
+      />
       <div className="workspace">
-        <Navbar
-          title={activePage.toUpperCase()}
-          appVersion={appVersion}
-        />
+        <Navbar title={activePage.toUpperCase()} appVersion={appVersion} />
         <main className="content">
-          {activePage === "settings" ? (
-            <Settings
+          {activePage === "update" ? (
+            <Update
               appVersion={appVersion}
               updateState={updateState}
               onCheckForUpdate={handleCheckForUpdate}
