@@ -17,8 +17,7 @@ const pageMap = {
   billing: Billing,
   customers: Customers,
   products: Products,
-  reports: Reports,
-  settings: Settings
+  reports: Reports
 };
 
 export default function App() {
@@ -76,12 +75,18 @@ export default function App() {
         <Navbar
           title={activePage.toUpperCase()}
           appVersion={appVersion}
-          updateState={updateState}
-          onCheckForUpdate={handleCheckForUpdate}
-          onInstallUpdate={handleInstallUpdate}
         />
         <main className="content">
-          <ActivePage />
+          {activePage === "settings" ? (
+            <Settings
+              appVersion={appVersion}
+              updateState={updateState}
+              onCheckForUpdate={handleCheckForUpdate}
+              onInstallUpdate={handleInstallUpdate}
+            />
+          ) : (
+            <ActivePage />
+          )}
         </main>
       </div>
     </div>

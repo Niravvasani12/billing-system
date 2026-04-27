@@ -68,21 +68,9 @@ body {
   color: #0f766e;
   font-weight: 600;
 }
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
 .app-version {
   margin: 4px 0 0;
   font-size: 12px;
-}
-.update-box {
-  border: 1px solid var(--border);
-  background: #f8fafc;
-  border-radius: 10px;
-  padding: 8px 10px;
-  min-width: 340px;
 }
 .update-text {
   margin: 0;
@@ -278,14 +266,6 @@ button.danger {
   .topbar {
     align-items: stretch;
     flex-direction: column;
-  }
-  .topbar-right {
-    width: 100%;
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .update-box {
-    min-width: 0;
   }
   .badge {
     width: fit-content;
@@ -543,6 +523,17 @@ button.danger {
   display: flex;
   gap: 10px;
 }
+.settings-update-panel {
+  display: grid;
+  gap: 10px;
+}
+.settings-update-text {
+  font-size: 13px;
+}
+.settings-update-actions {
+  display: flex;
+  justify-content: flex-end;
+}
 
 @media (max-width: 900px) {
   .settings-grid {
@@ -550,6 +541,9 @@ button.danger {
   }
   .settings-actions {
     flex-direction: column;
+  }
+  .settings-update-actions {
+    justify-content: stretch;
   }
 }
 .nav-btn {
