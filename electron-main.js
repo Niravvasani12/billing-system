@@ -1,4 +1,5 @@
 const { app, BrowserWindow } = require("electron");
+const { autoUpdater } = require("electron-updater"); // ✅ ADD THIS
 const path = require("path");
 
 const appConfig = require("./config/appConfig");
@@ -23,8 +24,8 @@ function createWindow() {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true
-    }
+      sandbox: true,
+    },
   });
 
   if (process.env.VITE_DEV_SERVER_URL) {
@@ -41,6 +42,27 @@ app.whenReady().then(() => {
   registerSettingsIPC();
 
   createWindow();
+
+  // 🔥 THIS IS THE MAIN FIX
+  autoUpdater.checkForUpdatesAndNotify();
+
+  // 🔥 OPTIONAL (GOOD FOR DEBUG)
+  autoUpdater.on("checking-for-update", () => {
+    console.log("Checking for update...");
+  });
+
+  autoUpdater.on("update-available", () => {
+    console.log("Update available");
+  });
+
+  autoUpdater.on("update-not-available", () => {
+    console.log("No update available");
+  });
+
+  autoUpdater.on("update-downloaded", () => {
+    console.log("Update downloaded");
+    autoUpdater.quitAndInstall(); // auto install
+  });
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {

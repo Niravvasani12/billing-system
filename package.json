@@ -1,6 +1,6 @@
 {
   "name": "billing-sys",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Desktop billing software with Electron + React + SQLite",
   "author": "Nirav Vasani",
   "main": "electron-main.js",
