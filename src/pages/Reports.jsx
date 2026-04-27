@@ -35,7 +35,8 @@ export default function Reports() {
   const customers = useSelector((state) => state.customer.items);
   const [search, setSearch] = useState("");
   const [range, setRange] = useState("all");
-  const [selectedCustomerKey, setSelectedCustomerKey] = useState(CUSTOMER_ALL_KEY);
+  const [selectedCustomerKey, setSelectedCustomerKey] =
+    useState(CUSTOMER_ALL_KEY);
   const [pdfInvoice, setPdfInvoice] = useState(null);
   const [downloadingLeatherPdf, setDownloadingLeatherPdf] = useState(false);
 
@@ -186,15 +187,15 @@ export default function Reports() {
     <section className="stack">
       <div className="cards-3">
         <div className="panel">
-          <p className="muted">Invoice Count</p>
+          <p className="muted">Invoice Count 📊</p>
           <h2>{filteredInvoices.length}</h2>
         </div>
         <div className="panel">
-          <p className="muted">Revenue</p>
+          <p className="muted">Revenue 💲</p>
           <h2>{formatCurrency(revenue)}</h2>
         </div>
         <div className="panel">
-          <p className="muted">Total Meters</p>
+          <p className="muted">Total Meters ⏲</p>
           <h2>{leatherTotals.meters.toFixed(3)} MTR</h2>
         </div>
       </div>
