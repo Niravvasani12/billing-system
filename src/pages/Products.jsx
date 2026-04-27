@@ -13,11 +13,18 @@ export default function Products() {
 
   return (
     <section className="stack">
-      <div className="panel"><h3>Add Product</h3><ProductForm onSubmit={handleAdd} /></div>
+      <div className="panel">
+        <h3>Add Product ➕</h3>
+        <ProductForm onSubmit={handleAdd} />
+      </div>
       <div className="panel">
         <h3>Product List</h3>
         {products.map((p) => (
-          <div className="list-row" key={p.id}><strong>{p.name}</strong><span>{p.sku || "-"}</span><span>{p.pricePerMeter}/meter</span></div>
+          <div className="list-row" key={p.id}>
+            <strong>{p.name}</strong>
+            <span>{p.sku || "-"}</span>
+            <span>{p.pricePerMeter}/meter</span>
+          </div>
         ))}
       </div>
     </section>

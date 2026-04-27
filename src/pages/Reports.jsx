@@ -187,7 +187,7 @@ export default function Reports() {
     <section className="stack">
       <div className="cards-3">
         <div className="panel">
-          <p className="muted">Invoice Count 📊</p>
+          <p className="muted">Invoice Count ⏳</p>
           <h2>{filteredInvoices.length}</h2>
         </div>
         <div className="panel">
