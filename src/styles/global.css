@@ -188,6 +188,42 @@ body {
 .update-btn.secondary {
   background: #0f766e;
 }
+.update-alert-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(3, 13, 26, 0.58);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+.update-alert-modal {
+  width: min(560px, 100%);
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #dbe5f1;
+  box-shadow: 0 24px 70px rgba(8, 24, 46, 0.35);
+  padding: 18px;
+  display: grid;
+  gap: 10px;
+}
+.update-alert-modal h3 {
+  margin: 0;
+  font-size: 24px;
+}
+.update-alert-modal p {
+  margin: 0;
+}
+.update-alert-danger {
+  color: #b42318;
+  font-weight: 600;
+}
+.update-alert-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
 .content {
   padding: 20px;
 }
