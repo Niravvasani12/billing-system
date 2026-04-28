@@ -8,7 +8,7 @@ export default function Navbar({ title, appVersion }) {
         <h1>{title}</h1>
         {appVersion ? <p className="muted app-version">v{appVersion}</p> : null}
       </div>
-      <div className="badge">Live Project Mode</div>
+      <div className="badge">DTF(Direct To Film)</div>
     </header>
   );
 }

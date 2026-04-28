@@ -10,7 +10,7 @@ export default function Dashboard() {
     <section className="stack">
       <div className="cards-3">
         <div className="panel">
-          <p className="muted">Invoices</p>
+          <p className="muted">Invoices📃</p>
           <h2>{invoices.length}</h2>
         </div>
         <div className="panel">
