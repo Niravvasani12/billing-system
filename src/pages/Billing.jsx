@@ -2,24 +2,37 @@ import { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { addInvoice } from "../store/slices/invoiceSlice";
 import { formatCurrency } from "../utils/formatCurrency";
-import { generateInvoiceNo } from "../utils/generateInvoiceNo";
 import BillPreview from "../components/BillPreview";
 
 const INCH_TO_METER = 0.0254;
 const emptyItem = { description: "", quantity: 0, unit: "meter", pricePerMeter: 0 };
 
 const toMeters = (qty, unit) => (unit === "inch" ? Number(qty || 0) * INCH_TO_METER : Number(qty || 0));
+const toInputDate = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 export default function Billing() {
   const dispatch = useDispatch();
   const customers = useSelector((state) => state.customer.items);
   const products = useSelector((state) => state.product.items);
-  const [invoiceNo, setInvoiceNo] = useState(generateInvoiceNo());
+  const invoices = useSelector((state) => state.invoice.items);
   const [customerId, setCustomerId] = useState("");
   const [gstPercent, setGstPercent] = useState(18);
+  const [invoiceDate, setInvoiceDate] = useState(toInputDate());
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState([{ ...emptyItem }]);
   const [latestInvoice, setLatestInvoice] = useState(null);
+  const invoiceNo = useMemo(() => {
+    const maxInvoiceNo = invoices.reduce((max, inv) => {
+      const value = Number(inv?.invoiceNo);
+      return Number.isInteger(value) && value > max ? value : max;
+    }, 0);
+    return String(maxInvoiceNo + 1);
+  }, [invoices]);
 
   const summary = useMemo(() => {
     const normalized = items.map((item) => {
@@ -50,9 +63,9 @@ export default function Billing() {
 
   const handleSave = async () => {
     const payload = {
-      invoiceNo,
       customerId: customerId ? Number(customerId) : null,
       gstPercent: Number(gstPercent || 0),
+      invoiceDate,
       notes,
       items: items.filter((item) => Number(item.quantity) > 0)
     };
@@ -63,7 +76,7 @@ export default function Billing() {
     setItems([{ ...emptyItem }]);
     setNotes("");
     setCustomerId("");
-    setInvoiceNo(generateInvoiceNo());
+    setInvoiceDate(toInputDate());
   };
 
   const previewCustomer = useMemo(() => {
@@ -83,6 +96,11 @@ export default function Billing() {
             ))}
           </select>
           <input type="number" value={gstPercent} onChange={(e) => setGstPercent(e.target.value)} placeholder="GST %" />
+          <input
+            type="date"
+            value={invoiceDate}
+            onChange={(e) => setInvoiceDate(e.target.value)}
+          />
         </div>
       </div>
 

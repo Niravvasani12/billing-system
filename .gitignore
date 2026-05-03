@@ -10,3 +10,4 @@ release/
 dist/
 *.exe
 *.zip
+.env

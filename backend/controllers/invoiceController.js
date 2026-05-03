@@ -14,13 +14,31 @@ exports.getInvoiceById = (id) => {
   return { ...invoice, items };
 };
 
+const getNextInvoiceNo = () => {
+  const row = db
+    .prepare(
+      `
+      SELECT COALESCE(MAX(CAST(invoiceNo AS INTEGER)), 0) + 1 AS nextInvoiceNo
+      FROM invoices
+      WHERE invoiceNo <> '' AND invoiceNo NOT GLOB '*[^0-9]*'
+      `
+    )
+    .get();
+
+  return String(row?.nextInvoiceNo || 1);
+};
+
 exports.createInvoice = (payload) => {
   const items = normalizeItems(payload.items || []);
   const totals = calculateInvoiceTotals(items, Number(payload.gstPercent || 0));
+  const selectedDate = typeof payload.invoiceDate === "string" ? payload.invoiceDate.trim() : "";
+  const createdAt = /^\d{4}-\d{2}-\d{2}$/.test(selectedDate)
+    ? `${selectedDate}T00:00:00`
+    : null;
 
   const insertInvoice = db.prepare(`
-    INSERT INTO invoices (invoiceNo, customerId, gstPercent, subtotal, gstAmount, total, notes)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO invoices (invoiceNo, customerId, gstPercent, subtotal, gstAmount, total, notes, createdAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))
   `);
   const insertItem = db.prepare(`
     INSERT INTO invoice_items (invoiceId, description, quantity, unit, meters, pricePerMeter, lineTotal)
@@ -28,14 +46,16 @@ exports.createInvoice = (payload) => {
   `);
 
   const transaction = db.transaction(() => {
+    const invoiceNo = getNextInvoiceNo();
     const invoiceResult = insertInvoice.run(
-      payload.invoiceNo,
+      invoiceNo,
       payload.customerId || null,
       totals.gstPercent,
       totals.subtotal,
       totals.gstAmount,
       totals.total,
-      payload.notes || ""
+      payload.notes || "",
+      createdAt
     );
 
     const invoiceId = invoiceResult.lastInsertRowid;

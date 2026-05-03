@@ -6,6 +6,7 @@ export const generatePdf = async (billNo, options = {}) => {
   const containerSelector = options.containerSelector || ".pdf-only";
   const fileNamePrefix = options.fileNamePrefix || "Invoice";
   const singlePage = options.singlePage === true;
+  const renderScale = options.renderScale || 4;
 
   const element = document.getElementById(elementId);
   const pdfContainer = document.querySelector(containerSelector);
@@ -31,19 +32,26 @@ export const generatePdf = async (billNo, options = {}) => {
     await new Promise((resolve) => setTimeout(resolve, 180));
 
     const canvas = await html2canvas(element, {
-      scale: 2,
+      scale: renderScale,
       useCORS: true,
+      imageTimeout: 0,
+      removeContainer: true,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight,
       backgroundColor: "#ffffff",
       logging: false
     });
 
-    const imgData = canvas.toDataURL("image/png");
+    const imgData = canvas.toDataURL("image/png", 1.0);
 
     const pdf = new jsPDF({
       orientation: "p",
       unit: "mm",
       format: "a4",
-      compress: true
+      compress: false,
+      precision: 16
     });
 
     const pageHeight = 297;
@@ -57,17 +65,17 @@ export const generatePdf = async (billNo, options = {}) => {
     if (singlePage) {
       const x = (pageWidth - imgWidth) / 2;
       const y = 0;
-      pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight, undefined, "FAST");
+      pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight, undefined, "NONE");
     } else {
       let heightLeft = imgHeight;
       let position = 0;
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight, undefined, "FAST");
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight, undefined, "NONE");
       heightLeft -= pageHeight;
 
       while (heightLeft > 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight, undefined, "FAST");
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight, undefined, "NONE");
         heightLeft -= pageHeight;
       }
     }
