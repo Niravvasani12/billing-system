@@ -184,18 +184,18 @@ export default function Reports() {
   };
 
   return (
-    <section className="stack">
-      <div className="cards-3">
-        <div className="panel">
-          <p className="muted">Invoice Count ⏳</p>
+    <section className="reports-dashboard">
+      <div className="cards-3 reports-stats-grid">
+        <div className="panel report-stat-card">
+          <p className="muted">Invoice Count</p>
           <h2>{filteredInvoices.length}</h2>
         </div>
-        <div className="panel">
-          <p className="muted">Revenue 💲</p>
+        <div className="panel report-stat-card">
+          <p className="muted">Revenue</p>
           <h2>{formatCurrency(revenue)}</h2>
         </div>
-        <div className="panel">
-          <p className="muted">Total Meters ⏲</p>
+        <div className="panel report-stat-card">
+          <p className="muted">Total Meters</p>
           <h2>{leatherTotals.meters.toFixed(3)} MTR</h2>
         </div>
       </div>
@@ -215,18 +215,9 @@ export default function Reports() {
         </select>
       </div>
 
-      <div className="panel">
-        <div className="report-actions-row">
+      <div className="panel report-main-panel">
+        <div className="report-section-title">
           <h3>Customer Invoice Report</h3>
-          <button
-            type="button"
-            onClick={downloadLeatherReportPdf}
-            disabled={downloadingLeatherPdf}
-          >
-            {downloadingLeatherPdf
-              ? "Preparing Leather Report..."
-              : "Download Leather Report (All Customers)"}
-          </button>
         </div>
 
         <div className="report-customer-layout">
@@ -263,8 +254,19 @@ export default function Reports() {
             )}
           </div>
 
-          <div>
-            <h4>Invoices (Click row to download PDF)</h4>
+          <div className="report-invoice-panel">
+            <div className="report-actions-row">
+              <h4>Invoices (Click row to download PDF)</h4>
+              <button
+                type="button"
+                onClick={downloadLeatherReportPdf}
+                disabled={downloadingLeatherPdf}
+              >
+                {downloadingLeatherPdf
+                  ? "Preparing Leather Report..."
+                  : "Download Leather Report (All Customers)"}
+              </button>
+            </div>
             {visibleInvoices.map((invoice) => (
               <button
                 type="button"
