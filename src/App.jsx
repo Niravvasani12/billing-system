@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
 import Billing from "./pages/Billing";
+import Sales from "./pages/Sales";
 import Customers from "./pages/Customers";
 import Products from "./pages/Products";
 import Reports from "./pages/Reports";
@@ -15,6 +16,7 @@ import { fetchInvoices } from "./store/slices/invoiceSlice";
 
 const pageMap = {
   billing: Billing,
+  sales: Sales,
   customers: Customers,
   dashboard: Dashboard,
   products: Products,

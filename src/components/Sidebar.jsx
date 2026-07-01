@@ -6,10 +6,12 @@ import {
   FaChartBar,
   FaCog,
   FaDownload,
+  FaReceipt,
 } from "react-icons/fa";
 
 const links = [
   { id: "billing", label: "Billing", icon: <FaFileInvoice />, tone: "tone-billing" },
+  { id: "sales", label: "Sales", icon: <FaReceipt />, tone: "tone-sales" },
   { id: "customers", label: "Customers", icon: <FaUsers />, tone: "tone-customers" },
   { id: "dashboard", label: "Dashboard", icon: <FaTachometerAlt />, tone: "tone-dashboard" },
   { id: "products", label: "Products", icon: <FaBox />, tone: "tone-products" },
