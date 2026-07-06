@@ -10,12 +10,32 @@ import {
 } from "react-icons/fa";
 
 const links = [
-  { id: "billing", label: "Billing", icon: <FaFileInvoice />, tone: "tone-billing" },
-  { id: "sales", label: "Sales", icon: <FaReceipt />, tone: "tone-sales" },
-  { id: "customers", label: "Customers", icon: <FaUsers />, tone: "tone-customers" },
-  { id: "dashboard", label: "Dashboard", icon: <FaTachometerAlt />, tone: "tone-dashboard" },
+  {
+    id: "billing",
+    label: "Billing",
+    icon: <FaFileInvoice />,
+    tone: "tone-billing",
+  },
+  // { id: "sales", label: "Sales", icon: <FaReceipt />, tone: "tone-sales" },
+  {
+    id: "customers",
+    label: "Customers",
+    icon: <FaUsers />,
+    tone: "tone-customers",
+  },
+  {
+    id: "dashboard",
+    label: "Dashboard",
+    icon: <FaTachometerAlt />,
+    tone: "tone-dashboard",
+  },
   { id: "products", label: "Products", icon: <FaBox />, tone: "tone-products" },
-  { id: "reports", label: "Reports", icon: <FaChartBar />, tone: "tone-reports" },
+  {
+    id: "reports",
+    label: "Reports",
+    icon: <FaChartBar />,
+    tone: "tone-reports",
+  },
   { id: "settings", label: "Settings", icon: <FaCog />, tone: "tone-settings" },
   { id: "update", label: "Update", icon: <FaDownload />, tone: "tone-update" },
 ];
@@ -24,14 +44,18 @@ export default function Sidebar({ activePage, onChange, showUpdateDot }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <h2>Billing Sys</h2>
-        <div className="sidebar-accent" />
+        <h2>Fluent Ledger</h2>
+        <p>The Precision Atelier</p>
       </div>
       <div className="sidebar-nav">
         {links.map((link) => (
           <button
             key={link.id}
-            className={activePage === link.id ? `nav-btn active ${link.tone}` : `nav-btn ${link.tone}`}
+            className={
+              activePage === link.id
+                ? `nav-btn active ${link.tone}`
+                : `nav-btn ${link.tone}`
+            }
             onClick={() => onChange(link.id)}
           >
             <span className="nav-btn-label">
@@ -40,9 +64,27 @@ export default function Sidebar({ activePage, onChange, showUpdateDot }) {
               </span>
               <span className="nav-text">{link.label}</span>
             </span>
-            {link.id === "update" && showUpdateDot ? <span className="nav-dot" /> : null}
+            {link.id === "update" && showUpdateDot ? (
+              <span className="nav-dot" />
+            ) : null}
           </button>
         ))}
+      </div>
+      <div className="sidebar-footer">
+        <button
+          type="button"
+          className="sidebar-new-btn"
+          onClick={() => onChange("sales")}
+        >
+          + New Transaction
+        </button>
+        <div className="sidebar-profile">
+          <span>AS</span>
+          <div>
+            <strong>Artisanal Shop</strong>
+            <small>Shopkeeper Profile</small>
+          </div>
+        </div>
       </div>
     </aside>
   );

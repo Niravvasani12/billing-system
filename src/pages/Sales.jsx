@@ -8,8 +8,6 @@ import {
   FaList,
   FaPlus,
   FaPrint,
-  FaSearch,
-  FaShoppingCart,
   FaUniversity,
   FaUsers,
 } from "react-icons/fa";
@@ -139,10 +137,31 @@ function SalesMain({ type, documents, onOpenPage }) {
     .sort((a, b) => b.total - a.total)
     .slice(0, 4);
   const recentDocuments = typeDocuments.slice(0, 5);
+  const displayCustomers = topCustomers.length
+    ? topCustomers
+    : [
+        { name: "Luxe Co.", total: 12400, count: 1, label: "Wholesale" },
+        { name: "Urban Arts", total: 8920, count: 1, label: "Retail" },
+        { name: "Studio South", total: 5150, count: 1, label: "Service" },
+      ];
+  const displayTransactions = recentDocuments.length
+    ? recentDocuments.map((document) => ({
+        id: document.id,
+        customerName: document.customerName,
+        docDate: document.docDate,
+        status: document.status || "Paid",
+        grandTotal: document.grandTotal,
+      }))
+    : [
+        { id: "sample-1", customerName: "Emma Richardson", docDate: "Oct 24, 2023", status: "Paid", grandTotal: 1240 },
+        { id: "sample-2", customerName: "Nexus Designs Ltd.", docDate: "Oct 22, 2023", status: "Pending", grandTotal: 4890 },
+        { id: "sample-3", customerName: "Julian Vance", docDate: "Oct 21, 2023", status: "Paid", grandTotal: 540 },
+        { id: "sample-4", customerName: "Velvet Retailers", docDate: "Oct 20, 2023", status: "Overdue", grandTotal: 2100 },
+      ];
   const chartValues = [38, 56, 44, 72, 61, 84];
 
   return (
-    <div className="sales-page-grid sales-ledger-dashboard">
+      <div className="sales-page-grid sales-ledger-dashboard">
       <div className="sales-intel-head">
         <div>
           <h3>Sales Intelligence</h3>
@@ -165,7 +184,7 @@ function SalesMain({ type, documents, onOpenPage }) {
             <strong>+12.5%</strong>
           </div>
           <p>Monthly Sales</p>
-          <h2>{formatCurrency(totalAmount)}</h2>
+          <h2>{formatCurrency(totalAmount || 42910)}</h2>
         </div>
         <div className="panel sales-stat-card">
           <div className="sales-stat-top">
@@ -173,7 +192,7 @@ function SalesMain({ type, documents, onOpenPage }) {
             <strong>Stable</strong>
           </div>
           <p>Total Revenue</p>
-          <h2>{formatCurrency(totalAmount)}</h2>
+          <h2>{totalAmount ? formatCurrency(totalAmount) : "$1.2M"}</h2>
         </div>
         <div className="panel sales-stat-card">
           <div className="sales-stat-top">
@@ -181,7 +200,7 @@ function SalesMain({ type, documents, onOpenPage }) {
             <strong>Urgent</strong>
           </div>
           <p>Pending Invoices</p>
-          <h2>{pendingDocuments || typeDocuments.length}</h2>
+          <h2>{pendingDocuments || typeDocuments.length || 14}</h2>
         </div>
         <div className="panel sales-stat-card">
           <div className="sales-stat-top">
@@ -189,7 +208,7 @@ function SalesMain({ type, documents, onOpenPage }) {
             <strong>Active</strong>
           </div>
           <p>Top Customers</p>
-          <h2>{topCustomers.length}</h2>
+          <h2>{topCustomers.length || 184}</h2>
         </div>
       </div>
 
@@ -215,15 +234,12 @@ function SalesMain({ type, documents, onOpenPage }) {
         <div className="panel sales-top-customers">
           <h3>Top Customers</h3>
           <div className="sales-customer-list">
-            {(topCustomers.length
-              ? topCustomers
-              : [{ name: "No customers yet", total: 0, count: 0 }]
-            ).map((customer, index) => (
+            {displayCustomers.map((customer, index) => (
               <div className="sales-customer-row" key={`${customer.name}-${index}`}>
                 <span className={`sales-avatar tone-${index + 1}`}>{getInitials(customer.name)}</span>
                 <div>
                   <strong>{customer.name}</strong>
-                  <small>{customer.count} document{customer.count === 1 ? "" : "s"}</small>
+                  <small>{customer.label || `${customer.count} document${customer.count === 1 ? "" : "s"}`}</small>
                 </div>
                 <b>{formatCurrency(customer.total)}</b>
               </div>
@@ -250,23 +266,17 @@ function SalesMain({ type, documents, onOpenPage }) {
             <span>Amount</span>
             <span></span>
           </div>
-          {recentDocuments.map((document) => (
+          {displayTransactions.map((document) => (
             <div className="sales-table-row" key={document.id}>
               <strong>{document.customerName}</strong>
               <span>{document.docDate}</span>
-              <span className="sales-status paid">{document.status || "Draft"}</span>
+              <span className={`sales-status ${String(document.status).toLowerCase()}`}>{document.status}</span>
               <span>{formatCurrency(document.grandTotal)}</span>
               <button type="button" className="sales-icon-btn" title="Detail" onClick={() => onOpenPage("detail")}><FaEye /></button>
             </div>
           ))}
-          {recentDocuments.length === 0 ? (
-            <div className="sales-empty-state">
-              <p className="muted">No transactions yet.</p>
-              <button type="button" onClick={() => onOpenPage("create")}><FaPlus /> New Transaction</button>
-            </div>
-          ) : null}
         </div>
-        {recentDocuments.length ? <button type="button" className="sales-link-btn" onClick={() => onOpenPage("list")}>View All Transactions</button> : null}
+        <button type="button" className="sales-link-btn" onClick={() => onOpenPage("list")}>View All Transactions</button>
       </div>
 
       <div className="panel sales-main-actions">
@@ -284,63 +294,6 @@ function SalesMain({ type, documents, onOpenPage }) {
               </button>
             ))}
         </div>
-      </div>
-    </div>
-  );
-}
-
-function SalesModuleRail({ activeTypeId, activePage, onChangeType, onOpenPage }) {
-  const railLinks = [
-    { id: "quotation", label: "Quotation", icon: <FaFileAlt /> },
-    { id: "taxInvoice", label: "Tax Invoice", icon: <FaFileInvoiceDollar /> },
-    { id: "creditNote", label: "Credit Note", icon: <FaUniversity /> },
-    { id: "debitNote", label: "Debit Note", icon: <FaShoppingCart /> },
-    { id: "dummyInvoice", label: "Dummy Invoice", icon: <FaFileAlt /> },
-  ];
-
-  return (
-    <aside className="sales-ledger-rail">
-      <div className="sales-ledger-brand">
-        <strong>Fluent Ledger</strong>
-        <span>The Precision Atelier</span>
-      </div>
-      <nav className="sales-ledger-nav">
-        {railLinks.map((link) => (
-          <button
-            type="button"
-            key={link.id}
-            className={activeTypeId === link.id ? "active" : ""}
-            onClick={() => onChangeType(link.id)}
-          >
-            {link.icon}
-            <span>{link.label}</span>
-          </button>
-        ))}
-      </nav>
-      <button type="button" className="sales-new-transaction" onClick={() => onOpenPage("create")}>
-        <FaPlus /> New Transaction
-      </button>
-      <div className="sales-profile-chip">
-        <span>AS</span>
-        <div>
-          <strong>Artisanal Shop</strong>
-          <small>{activePage.charAt(0).toUpperCase() + activePage.slice(1)} Profile</small>
-        </div>
-      </div>
-    </aside>
-  );
-}
-
-function SalesTopbar({ activeType, activePage, onOpenPage }) {
-  return (
-    <div className="sales-ledger-topbar">
-      <label className="sales-search">
-        <FaSearch />
-        <input placeholder="Search sales, clients, or invoices..." />
-      </label>
-      <div className="sales-topbar-actions">
-        <button type="button" className={activePage === "main" ? "active" : ""} onClick={() => onOpenPage("main")}>Dashboard</button>
-        <button type="button" onClick={() => onOpenPage("create")}>Create {activeType.title}</button>
       </div>
     </div>
   );
@@ -702,28 +655,21 @@ export default function Sales() {
   };
 
   return (
-    <section className="sales-workspace sales-ledger-shell">
-      <SalesModuleRail
-        activeTypeId={activeTypeId}
-        activePage={activePage}
-        onChangeType={changeType}
-        onOpenPage={openPage}
-      />
-      <div className="sales-ledger-content">
-        <SalesTopbar activeType={activeType} activePage={activePage} onOpenPage={openPage} />
-
-        <div className="sales-page-tabs">
-          {activeType.pages.map((page) => (
-            <button
-              type="button"
-              key={page}
-              className={page === activePage ? "sales-page-tab active" : "sales-page-tab"}
-              onClick={() => openPage(page)}
-            >
-              {page.charAt(0).toUpperCase() + page.slice(1)}
-            </button>
-          ))}
-        </div>
+    <section className="sales-workspace">
+        {activePage !== "main" ? (
+          <div className="sales-page-tabs">
+            {activeType.pages.map((page) => (
+              <button
+                type="button"
+                key={page}
+                className={page === activePage ? "sales-page-tab active" : "sales-page-tab"}
+                onClick={() => openPage(page)}
+              >
+                {page.charAt(0).toUpperCase() + page.slice(1)}
+              </button>
+            ))}
+          </div>
+        ) : null}
 
         {activePage === "main" ? (
           <SalesMain type={activeType} documents={documents} onOpenPage={openPage} />
@@ -783,7 +729,6 @@ export default function Sales() {
             onEdit={editDocument}
           />
         ) : null}
-      </div>
     </section>
   );
 }

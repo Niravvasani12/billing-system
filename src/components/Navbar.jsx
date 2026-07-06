@@ -1,14 +1,20 @@
-export default function Navbar({ title, appVersion }) {
+import { FaBell, FaCog, FaQuestionCircle, FaSearch, FaUserCircle } from "react-icons/fa";
+
+export default function Navbar({ user, onLogout }) {
   return (
     <header className="topbar">
-      <div>
-        <p className="muted">
-          Riva DTF Printing Solution Desktop Billing Soft.{" "}
-        </p>
-        <h1>{title}</h1>
-        {appVersion ? <p className="muted app-version">v{appVersion}</p> : null}
+      <label className="app-search">
+        <FaSearch />
+        <input placeholder="Search sales, clients, or invoices..." />
+      </label>
+      <div className="topbar-actions">
+        <button type="button" title="Notifications"><FaBell /></button>
+        <button type="button" title="Settings"><FaCog /></button>
+        <button type="button" title="Help"><FaQuestionCircle /></button>
+        <button type="button" className="topbar-user" title={user?.businessName || "Profile"} onClick={onLogout}>
+          <FaUserCircle />
+        </button>
       </div>
-      <div className="badge">DTF(Direct To Film)</div>
     </header>
   );
 }

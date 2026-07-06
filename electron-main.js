@@ -110,6 +110,7 @@ function createWindow() {
     minHeight: 700,
     title: appConfig.appName,
     icon: iconPath,
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -119,6 +120,7 @@ function createWindow() {
   });
 
   mainWindow = win;
+  win.maximize();
 
   if (process.env.VITE_DEV_SERVER_URL) {
     win.loadURL(process.env.VITE_DEV_SERVER_URL);
