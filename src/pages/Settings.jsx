@@ -20,12 +20,12 @@ import {
   FaTicketAlt,
   FaSearch,
   FaExclamationTriangle,
-  FaTimes
+  FaTimes,
 } from "react-icons/fa";
 import {
   defaultAppSettings,
   resetAppSettings,
-  useAppSettings
+  useAppSettings,
 } from "../utils/appSettings";
 
 const businessTypes = [
@@ -64,7 +64,7 @@ const businessTypes = [
   "Consultancy",
   "Gym",
   "Beauty Salon",
-  "Other"
+  "Other",
 ];
 
 export default function Settings({ onChangePage }) {
@@ -145,18 +145,19 @@ export default function Settings({ onChangePage }) {
       return;
     }
     setReferralApplied(true);
-    setReferralMessage("Referral Code applied successfully! 1 Month free Basic Plan activated!");
+    setReferralMessage(
+      "Referral Code applied successfully! 1 Month free Basic Plan activated!",
+    );
     setTimeout(() => setReferralMessage(""), 4000);
   };
 
   const filteredBusinessTypes = businessTypes.filter((type) =>
-    type.toLowerCase().includes(searchTerm.toLowerCase())
+    type.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
     <section className="profile-page-container">
       <form onSubmit={onSave} className="stack">
-        
         {/* Header */}
         <div className="profile-header">
           <div className="profile-header-left">
@@ -177,10 +178,9 @@ export default function Settings({ onChangePage }) {
 
         {/* Upload Logo / Signature Panel */}
         <div className="upload-card-container">
-          
           {/* Logo Box */}
-          <div 
-            className="upload-box" 
+          <div
+            className="upload-box"
             onClick={() => logoInputRef.current?.click()}
             title="Click to add logo"
           >
@@ -217,8 +217,8 @@ export default function Settings({ onChangePage }) {
           </div>
 
           {/* Signature Box */}
-          <div 
-            className="upload-box" 
+          <div
+            className="upload-box"
             onClick={() => signatureInputRef.current?.click()}
             title="Click to add signature"
           >
@@ -253,18 +253,18 @@ export default function Settings({ onChangePage }) {
               </>
             )}
           </div>
-
         </div>
 
         {/* IDENTITY */}
         <div className="profile-section">
           <div className="profile-section-title">Identity</div>
           <div className="profile-card">
-            
             <div className="input-with-icon-wrapper">
               <label className="input-label">Business / Trading Name *:</label>
               <div className="input-with-icon">
-                <span className="input-icon-box"><FaStore /></span>
+                <span className="input-icon-box">
+                  <FaStore />
+                </span>
                 <input
                   type="text"
                   required
@@ -275,7 +275,7 @@ export default function Settings({ onChangePage }) {
               </div>
             </div>
 
-            <div className="input-with-icon-wrapper">
+            {/* <div className="input-with-icon-wrapper">
               <label className="input-label">Business Type * (Locked):</label>
               <div className="custom-dropdown-container" ref={dropdownRef}>
                 <button
@@ -338,13 +338,15 @@ export default function Settings({ onChangePage }) {
                   </div>
                 )}
               </div>
-            </div>
+            </div> */}
 
             <div className="profile-grid-2">
               <div className="input-with-icon-wrapper">
                 <label className="input-label">Contact Number *:</label>
                 <div className="input-with-icon">
-                  <span className="input-icon-box"><FaPhoneAlt /></span>
+                  <span className="input-icon-box">
+                    <FaPhoneAlt />
+                  </span>
                   <input
                     type="text"
                     required
@@ -358,7 +360,9 @@ export default function Settings({ onChangePage }) {
               <div className="input-with-icon-wrapper">
                 <label className="input-label">Official Email *:</label>
                 <div className="input-with-icon">
-                  <span className="input-icon-box"><FaEnvelope /></span>
+                  <span className="input-icon-box">
+                    <FaEnvelope />
+                  </span>
                   <input
                     type="email"
                     required
@@ -369,19 +373,21 @@ export default function Settings({ onChangePage }) {
                 </div>
               </div>
             </div>
-
           </div>
         </div>
 
         {/* CONTACT DETAILS */}
         <div className="profile-section">
-          <div className="profile-section-title">Contact Details & Settings</div>
+          <div className="profile-section-title">
+            Contact Details & Settings
+          </div>
           <div className="profile-card">
-            
             <div className="input-with-icon-wrapper">
               <label className="input-label">Address:</label>
               <div className="input-with-icon">
-                <span className="input-icon-box"><FaMapMarkerAlt /></span>
+                <span className="input-icon-box">
+                  <FaMapMarkerAlt />
+                </span>
                 <input
                   type="text"
                   value={form.address || ""}
@@ -395,7 +401,9 @@ export default function Settings({ onChangePage }) {
               <div className="input-with-icon-wrapper">
                 <label className="input-label">GSTIN:</label>
                 <div className="input-with-icon">
-                  <span className="input-icon-box"><FaIdCard /></span>
+                  <span className="input-icon-box">
+                    <FaIdCard />
+                  </span>
                   <input
                     type="text"
                     value={form.gstin || ""}
@@ -408,7 +416,9 @@ export default function Settings({ onChangePage }) {
               <div className="input-with-icon-wrapper">
                 <label className="input-label">Place of Supply:</label>
                 <div className="input-with-icon">
-                  <span className="input-icon-box"><FaGlobe /></span>
+                  <span className="input-icon-box">
+                    <FaGlobe />
+                  </span>
                   <input
                     type="text"
                     value={form.placeOfSupply || ""}
@@ -423,7 +433,9 @@ export default function Settings({ onChangePage }) {
               <div className="input-with-icon-wrapper">
                 <label className="input-label">Due Days:</label>
                 <div className="input-with-icon">
-                  <span className="input-icon-box"><FaCalendarAlt /></span>
+                  <span className="input-icon-box">
+                    <FaCalendarAlt />
+                  </span>
                   <input
                     type="number"
                     min="1"
@@ -433,11 +445,13 @@ export default function Settings({ onChangePage }) {
                   />
                 </div>
               </div>
-              
+
               <div className="input-with-icon-wrapper">
                 <label className="input-label">PDF Header Badge:</label>
                 <div className="input-with-icon">
-                  <span className="input-icon-box"><FaRegFileAlt /></span>
+                  <span className="input-icon-box">
+                    <FaRegFileAlt />
+                  </span>
                   <input
                     type="text"
                     value={form.pdfBadge || ""}
@@ -452,20 +466,28 @@ export default function Settings({ onChangePage }) {
               <div className="input-with-icon-wrapper">
                 <label className="input-label">Authorised Title:</label>
                 <div className="input-with-icon">
-                  <span className="input-icon-box"><FaRegFileAlt /></span>
+                  <span className="input-icon-box">
+                    <FaRegFileAlt />
+                  </span>
                   <input
                     type="text"
                     value={form.authorisedTitle || ""}
-                    onChange={(e) => setField("authorisedTitle", e.target.value)}
+                    onChange={(e) =>
+                      setField("authorisedTitle", e.target.value)
+                    }
                     placeholder="Authorised Title"
                   />
                 </div>
               </div>
-              
+
               <div className="input-with-icon-wrapper">
-                <label className="input-label">Authorised Signatory Name:</label>
+                <label className="input-label">
+                  Authorised Signatory Name:
+                </label>
                 <div className="input-with-icon">
-                  <span className="input-icon-box"><FaUser /></span>
+                  <span className="input-icon-box">
+                    <FaUser />
+                  </span>
                   <input
                     type="text"
                     value={form.authorisedName || ""}
@@ -475,7 +497,6 @@ export default function Settings({ onChangePage }) {
                 </div>
               </div>
             </div>
-
           </div>
         </div>
 
@@ -483,12 +504,13 @@ export default function Settings({ onChangePage }) {
         <div className="profile-section">
           <div className="profile-section-title">Bank Details</div>
           <div className="profile-card">
-            
             <div className="profile-grid-2">
               <div className="input-with-icon-wrapper">
                 <label className="input-label">Account Holder Name:</label>
                 <div className="input-with-icon">
-                  <span className="input-icon-box"><FaUser /></span>
+                  <span className="input-icon-box">
+                    <FaUser />
+                  </span>
                   <input
                     type="text"
                     value={form.accountName || ""}
@@ -501,7 +523,9 @@ export default function Settings({ onChangePage }) {
               <div className="input-with-icon-wrapper">
                 <label className="input-label">Bank Name:</label>
                 <div className="input-with-icon">
-                  <span className="input-icon-box"><FaUniversity /></span>
+                  <span className="input-icon-box">
+                    <FaUniversity />
+                  </span>
                   <input
                     type="text"
                     value={form.bankName || ""}
@@ -516,7 +540,9 @@ export default function Settings({ onChangePage }) {
               <div className="input-with-icon-wrapper">
                 <label className="input-label">Account Number:</label>
                 <div className="input-with-icon">
-                  <span className="input-icon-box"><FaCreditCard /></span>
+                  <span className="input-icon-box">
+                    <FaCreditCard />
+                  </span>
                   <input
                     type="text"
                     value={form.accountNo || ""}
@@ -529,7 +555,9 @@ export default function Settings({ onChangePage }) {
               <div className="input-with-icon-wrapper">
                 <label className="input-label">IFSC Code:</label>
                 <div className="input-with-icon">
-                  <span className="input-icon-box"><FaCode /></span>
+                  <span className="input-icon-box">
+                    <FaCode />
+                  </span>
                   <input
                     type="text"
                     value={form.ifsc || ""}
@@ -539,7 +567,6 @@ export default function Settings({ onChangePage }) {
                 </div>
               </div>
             </div>
-
           </div>
         </div>
 
@@ -547,11 +574,13 @@ export default function Settings({ onChangePage }) {
         <div className="profile-section">
           <div className="profile-section-title">Additional Notes & Terms</div>
           <div className="profile-card">
-            
             <div className="input-with-icon-wrapper">
               <label className="input-label">Additional Notes & Terms:</label>
               <div className="input-with-icon">
-                <span className="input-icon-box" style={{ alignSelf: "flex-start", marginTop: "12px" }}>
+                <span
+                  className="input-icon-box"
+                  style={{ alignSelf: "flex-start", marginTop: "12px" }}
+                >
                   <FaRegFileAlt />
                 </span>
                 <textarea
@@ -562,11 +591,10 @@ export default function Settings({ onChangePage }) {
                 />
               </div>
             </div>
-            
+
             <div className="card-footnote">
               These details will appear on your generated invoices.
             </div>
-
           </div>
         </div>
 
@@ -574,16 +602,19 @@ export default function Settings({ onChangePage }) {
         <div className="profile-section">
           <div className="profile-section-title">Referral Program</div>
           <div className="profile-card">
-            
             <div className="input-with-icon-wrapper">
               <label className="input-label">Friend's Referral Code:</label>
               <div className="referral-input-group">
                 <div className="input-with-icon" style={{ width: "100%" }}>
-                  <span className="input-icon-box"><FaTicketAlt /></span>
+                  <span className="input-icon-box">
+                    <FaTicketAlt />
+                  </span>
                   <input
                     type="text"
                     value={form.friendReferralCode || ""}
-                    onChange={(e) => setField("friendReferralCode", e.target.value)}
+                    onChange={(e) =>
+                      setField("friendReferralCode", e.target.value)
+                    }
                     placeholder="e.g. ABC123DE"
                     disabled={referralApplied}
                   />
@@ -598,17 +629,23 @@ export default function Settings({ onChangePage }) {
                 </button>
               </div>
             </div>
-            
+
             {referralMessage && (
-              <div style={{ fontSize: "12px", color: referralApplied ? "#10b981" : "#ef4444", fontWeight: "600" }}>
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: referralApplied ? "#10b981" : "#ef4444",
+                  fontWeight: "600",
+                }}
+              >
                 {referralMessage}
               </div>
             )}
 
             <div className="card-footnote" style={{ marginTop: "0" }}>
-              Enter a friend's code to get 1 Month Basic Plan for free Instantly!
+              Enter a friend's code to get 1 Month Basic Plan for free
+              Instantly!
             </div>
-
           </div>
         </div>
 
@@ -620,11 +657,17 @@ export default function Settings({ onChangePage }) {
         </div>
 
         {savedMsg && (
-          <div style={{ textAlign: "center", color: "#10b981", fontWeight: "600", marginBottom: "16px" }}>
+          <div
+            style={{
+              textAlign: "center",
+              color: "#10b981",
+              fontWeight: "600",
+              marginBottom: "16px",
+            }}
+          >
             {savedMsg}
           </div>
         )}
-
       </form>
     </section>
   );
