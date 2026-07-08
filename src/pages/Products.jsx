@@ -2,13 +2,13 @@ import { useDispatch, useSelector } from "react-redux";
 import ProductForm from "../components/ProductForm";
 import { addProduct, fetchProducts } from "../store/slices/productSlice";
 
-export default function Products() {
+export default function Products({ user }) {
   const dispatch = useDispatch();
   const products = useSelector((state) => state.product.items);
 
   const handleAdd = async (payload) => {
-    await dispatch(addProduct(payload));
-    dispatch(fetchProducts());
+    await dispatch(addProduct({ payload, userId: user?.id }));
+    dispatch(fetchProducts(user?.id));
   };
 
   return (
@@ -23,7 +23,7 @@ export default function Products() {
           <div className="list-row" key={p.id}>
             <strong>{p.name}</strong>
             <span>{p.sku || "-"}</span>
-            <span>{p.pricePerMeter}/meter</span>
+            <span>{p.pricePerMeter}/unit</span>
           </div>
         ))}
       </div>

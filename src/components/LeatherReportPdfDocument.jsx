@@ -33,7 +33,7 @@ export default function LeatherReportPdfDocument({
               <th>INVOICE NO</th>
               <th>CUSTOMER</th>
               <th>ITEM</th>
-              <th>QTY (MTR)</th>
+              <th>QTY</th>
               <th>RATE</th>
               <th>AMOUNT</th>
             </tr>
@@ -46,7 +46,7 @@ export default function LeatherReportPdfDocument({
                 <td>{row.invoiceNo}</td>
                 <td>{row.customerName}</td>
                 <td>{row.itemName}</td>
-                <td>{Number(row.meters || 0).toFixed(3)}</td>
+                <td>{Number(row.meters || 0).toFixed(2)} {row.unit}</td>
                 <td>{formatCurrency(row.pricePerMeter || 0)}</td>
                 <td>{formatCurrency(row.lineTotal || 0)}</td>
               </tr>
@@ -61,7 +61,7 @@ export default function LeatherReportPdfDocument({
 
         <div className="inv-subtotal-row leather-totals">
           <strong>TOTAL</strong>
-          <strong>{Number(totalMeters || 0).toFixed(3)} MTR</strong>
+          <strong></strong>
           <strong>{rows.length} ROWS</strong>
           <strong>{formatCurrency(totalAmount || 0)}</strong>
         </div>

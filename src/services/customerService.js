@@ -1,6 +1,6 @@
 import api from "./ipcClient";
 
-export const listCustomers = () => api.customer.list();
-export const createCustomer = (payload) => api.customer.create(payload);
-export const updateCustomer = (id, payload) => api.customer.update(id, payload);
-export const deleteCustomer = (id) => api.customer.remove(id);
+export const listCustomers = (userId) => api.customer.list(userId);
+export const createCustomer = (payload, userId) => api.customer.create(payload, userId);
+export const updateCustomer = (id, payload, userId) => api.customer.update(id, payload, userId);
+export const deleteCustomer = (id, userId) => api.customer.remove(id, userId);

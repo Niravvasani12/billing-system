@@ -4,23 +4,27 @@ import api from "../services/ipcClient";
 export const SETTINGS_KEY = "billing_sys_settings_v1";
 
 export const defaultAppSettings = {
-  companyName: "RIVA ENTERPRISE",
-  address: "32, Pushpa Nagar, Punagam Road, Surat, Gujarat, 395010",
-  mobile: "8000572371",
-  email: "rivaenterprise2208@gmail.com",
-  gstin: "24FOMPP6860N2Z0",
-  placeOfSupply: "Gujarat",
-  bankName: "Surat District Co-operative Bank, PUNA",
-  accountName: "RIVA ENTERPRISE",
-  accountNo: "401003613217",
-  ifsc: "SDCB0000098",
+  companyName: "",
+  address: "",
+  mobile: "",
+  email: "",
+  gstin: "",
+  placeOfSupply: "",
+  bankName: "",
+  accountName: "",
+  accountNo: "",
+  ifsc: "",
   terms1: "Goods once sold will not be taken back or exchanged.",
-  terms2: "All disputes are subject to Surat jurisdiction only.",
+  terms2: "All disputes are subject to local jurisdiction only.",
   authorisedTitle: "AUTHORISED SIGNATORY FOR",
-  authorisedName: "RIVA ENTERPRISE",
+  authorisedName: "",
   pdfBadge: "ORIGINAL FOR RECIPIENT",
   dueDays: 7,
-  pdfLogoDataUrl: ""
+  pdfLogoDataUrl: "",
+  businessType: "",
+  pdfSignatureDataUrl: "",
+  terms: "Goods once sold will not be taken back or exchanged.\nAll disputes are subject to local jurisdiction only.",
+  friendReferralCode: ""
 };
 
 const normalizeSettings = (raw) => ({
@@ -29,9 +33,24 @@ const normalizeSettings = (raw) => ({
   dueDays: Number(raw?.dueDays || defaultAppSettings.dueDays)
 });
 
+const getSessionUserId = () => {
+  try {
+    const session = JSON.parse(localStorage.getItem("billing:auth-session") || "null");
+    return session?.userId || "";
+  } catch {
+    return "";
+  }
+};
+
+const getSettingsKey = () => {
+  const userId = getSessionUserId();
+  return userId ? `billing_sys_settings_v1_${userId}` : SETTINGS_KEY;
+};
+
 const readSettingsFromLocalStorage = () => {
   try {
-    const raw = localStorage.getItem(SETTINGS_KEY);
+    const key = getSettingsKey();
+    const raw = localStorage.getItem(key);
     if (!raw) return { ...defaultAppSettings };
     return normalizeSettings(JSON.parse(raw));
   } catch {
@@ -41,7 +60,8 @@ const readSettingsFromLocalStorage = () => {
 
 const writeSettingsToLocalStorage = (nextValue) => {
   const next = normalizeSettings(nextValue);
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
+  const key = getSettingsKey();
+  localStorage.setItem(key, JSON.stringify(next));
   return next;
 };
 
@@ -52,18 +72,20 @@ const notifySettingsUpdated = (next) => {
 const isUsingElectronSettings = () => typeof api?.settings?.get === "function";
 
 export const readAppSettings = async () => {
+  const userId = getSessionUserId();
   if (!isUsingElectronSettings()) {
     return readSettingsFromLocalStorage();
   }
 
-  const remoteSettings = normalizeSettings(await api.settings.get());
-  const hasLocalSettings = Boolean(localStorage.getItem(SETTINGS_KEY));
+  const remoteSettings = normalizeSettings(await api.settings.get(userId));
+  const key = getSettingsKey();
+  const hasLocalSettings = Boolean(localStorage.getItem(key));
 
   if (hasLocalSettings) {
     const localSettings = readSettingsFromLocalStorage();
     const remoteIsDefault = JSON.stringify(remoteSettings) === JSON.stringify(defaultAppSettings);
     if (remoteIsDefault) {
-      const migrated = normalizeSettings(await api.settings.save(localSettings));
+      const migrated = normalizeSettings(await api.settings.save(localSettings, userId));
       writeSettingsToLocalStorage(migrated);
       return migrated;
     }
@@ -74,16 +96,18 @@ export const readAppSettings = async () => {
 };
 
 export const writeAppSettings = async (nextValue) => {
+  const userId = getSessionUserId();
   const normalized = normalizeSettings(nextValue);
-  const saved = isUsingElectronSettings() ? normalizeSettings(await api.settings.save(normalized)) : normalized;
+  const saved = isUsingElectronSettings() ? normalizeSettings(await api.settings.save(normalized, userId)) : normalized;
   const persisted = writeSettingsToLocalStorage(saved);
   notifySettingsUpdated(persisted);
   return persisted;
 };
 
 export const resetAppSettings = async () => {
+  const userId = getSessionUserId();
   const resetValue = isUsingElectronSettings()
-    ? normalizeSettings(await api.settings.reset())
+    ? normalizeSettings(await api.settings.reset(userId))
     : normalizeSettings(defaultAppSettings);
   const persisted = writeSettingsToLocalStorage(resetValue);
   notifySettingsUpdated(persisted);

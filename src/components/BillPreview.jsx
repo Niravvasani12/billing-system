@@ -35,7 +35,7 @@ export default function BillPreview({ invoice, customer }) {
         </div>
         <div className="bill-row-lite"><span>Customer</span><span>{customer?.name || "Walk-in Customer"}</span></div>
         <div className="bill-row-lite"><span>Mobile</span><span>{customer?.phone || "-"}</span></div>
-        <div className="bill-row-lite"><span>Meter</span><span>{totalMeters.toFixed(3)} MTR</span></div>
+        <div className="bill-row-lite"><span>Total Items</span><span>{items.length} line(s)</span></div>
         <div className="bill-row-lite"><span>Taxable Amount</span><strong>{formatCurrency(invoice.subtotal)}</strong></div>
         <div className="bill-total-lite"><h2>{formatCurrency(invoice.total)}</h2></div>
       </div>

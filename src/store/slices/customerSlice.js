@@ -1,13 +1,17 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { createCustomer, listCustomers } from "../../services/customerService";
 
-export const fetchCustomers = createAsyncThunk("customer/fetchAll", async () => listCustomers());
-export const addCustomer = createAsyncThunk("customer/add", async (payload) => createCustomer(payload));
+export const fetchCustomers = createAsyncThunk("customer/fetchAll", async (userId) => listCustomers(userId));
+export const addCustomer = createAsyncThunk("customer/add", async ({ payload, userId }) => createCustomer(payload, userId));
 
 const customerSlice = createSlice({
   name: "customer",
   initialState: { items: [] },
-  reducers: {},
+  reducers: {
+    clearCustomers: (state) => {
+      state.items = [];
+    }
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchCustomers.fulfilled, (state, action) => {
@@ -19,4 +23,5 @@ const customerSlice = createSlice({
   }
 });
 
+export const { clearCustomers } = customerSlice.actions;
 export default customerSlice.reducer;

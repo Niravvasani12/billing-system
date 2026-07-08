@@ -1,13 +1,17 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { createProduct, listProducts } from "../../services/productService";
 
-export const fetchProducts = createAsyncThunk("product/fetchAll", async () => listProducts());
-export const addProduct = createAsyncThunk("product/add", async (payload) => createProduct(payload));
+export const fetchProducts = createAsyncThunk("product/fetchAll", async (userId) => listProducts(userId));
+export const addProduct = createAsyncThunk("product/add", async ({ payload, userId }) => createProduct(payload, userId));
 
 const productSlice = createSlice({
   name: "product",
   initialState: { items: [] },
-  reducers: {},
+  reducers: {
+    clearProducts: (state) => {
+      state.items = [];
+    }
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchProducts.fulfilled, (state, action) => {
@@ -19,4 +23,5 @@ const productSlice = createSlice({
   }
 });
 
+export const { clearProducts } = productSlice.actions;
 export default productSlice.reducer;

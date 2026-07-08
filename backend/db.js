@@ -89,4 +89,48 @@ db.exec(`
   );
 `);
 
+// Multi-industry schema migrations
+try {
+  db.exec("ALTER TABLE invoices ADD COLUMN industry TEXT;");
+} catch (e) {
+  // Column already exists
+}
+try {
+  db.exec("ALTER TABLE invoices ADD COLUMN userId TEXT;");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE customers ADD COLUMN userId TEXT;");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE products ADD COLUMN userId TEXT;");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE invoice_items ADD COLUMN width REAL;");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE invoice_items ADD COLUMN height REAL;");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE invoice_items ADD COLUMN makingCharges REAL;");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE invoice_items ADD COLUMN serialNumber TEXT;");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE invoice_items ADD COLUMN batchNo TEXT;");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE invoice_items ADD COLUMN expiryDate TEXT;");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE invoice_items ADD COLUMN mrp REAL;");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE invoice_items ADD COLUMN partNumber TEXT;");
+} catch (e) {}
+try {
+  db.exec("ALTER TABLE invoice_items ADD COLUMN industry TEXT;");
+} catch (e) {}
+
 module.exports = db;
+

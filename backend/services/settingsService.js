@@ -5,20 +5,20 @@ const { app } = require("electron");
 const SETTINGS_FILE = "app-settings.json";
 
 const defaultAppSettings = {
-  companyName: "RIVA ENTERPRISE",
-  address: "32, Pushpa Nagar, Punagam Road, Surat, Gujarat, 395010",
-  mobile: "8000572371",
-  email: "rivaenterprise2208@gmail.com",
-  gstin: "24FOMPP6860N2Z0",
-  placeOfSupply: "Gujarat",
-  bankName: "Surat District Co-operative Bank, PUNA",
-  accountName: "RIVA ENTERPRISE",
-  accountNo: "401003613217",
-  ifsc: "SDCB0000098",
+  companyName: "",
+  address: "",
+  mobile: "",
+  email: "",
+  gstin: "",
+  placeOfSupply: "",
+  bankName: "",
+  accountName: "",
+  accountNo: "",
+  ifsc: "",
   terms1: "Goods once sold will not be taken back or exchanged.",
-  terms2: "All disputes are subject to Surat jurisdiction only.",
+  terms2: "All disputes are subject to local jurisdiction only.",
   authorisedTitle: "AUTHORISED SIGNATORY FOR",
-  authorisedName: "RIVA ENTERPRISE",
+  authorisedName: "",
   pdfBadge: "ORIGINAL FOR RECIPIENT",
   dueDays: 7,
   pdfLogoDataUrl: ""
@@ -30,7 +30,7 @@ const normalizeSettings = (raw) => ({
   dueDays: Number(raw?.dueDays || defaultAppSettings.dueDays)
 });
 
-const resolveSettingsPath = () => {
+const resolveSettingsPath = (userId) => {
   const persistentDir = app?.getPath?.("appData")
     ? path.join(app.getPath("appData"), "BillingSystemData")
     : path.join(__dirname, "..", "..", "database");
@@ -39,12 +39,13 @@ const resolveSettingsPath = () => {
     fs.mkdirSync(persistentDir, { recursive: true });
   }
 
-  return path.join(persistentDir, SETTINGS_FILE);
+  const fileName = userId ? `app-settings-${userId}.json` : SETTINGS_FILE;
+  return path.join(persistentDir, fileName);
 };
 
-const readSettingsFile = () => {
+const readSettingsFile = (userId) => {
   try {
-    const filePath = resolveSettingsPath();
+    const filePath = resolveSettingsPath(userId);
     if (!fs.existsSync(filePath)) return { ...defaultAppSettings };
     const raw = fs.readFileSync(filePath, "utf8");
     if (!raw?.trim()) return { ...defaultAppSettings };
@@ -54,13 +55,13 @@ const readSettingsFile = () => {
   }
 };
 
-const writeSettingsFile = (settings) => {
-  const filePath = resolveSettingsPath();
+const writeSettingsFile = (settings, userId) => {
+  const filePath = resolveSettingsPath(userId);
   const normalized = normalizeSettings(settings);
   fs.writeFileSync(filePath, JSON.stringify(normalized, null, 2), "utf8");
   return normalized;
 };
 
-exports.getSettings = () => readSettingsFile();
-exports.saveSettings = (settings) => writeSettingsFile(settings);
-exports.resetSettings = () => writeSettingsFile(defaultAppSettings);
+exports.getSettings = (userId) => readSettingsFile(userId);
+exports.saveSettings = (settings, userId) => writeSettingsFile(settings, userId);
+exports.resetSettings = (userId) => writeSettingsFile(defaultAppSettings, userId);

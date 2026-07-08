@@ -4,6 +4,8 @@ import { generatePdf } from "../utils/pdfGenerator";
 import { formatCurrency } from "../utils/formatCurrency";
 import InvoicePdfDocument from "../components/InvoicePdfDocument";
 import LeatherReportPdfDocument from "../components/LeatherReportPdfDocument";
+import { FaFileInvoice, FaFileInvoiceDollar, FaRuler, FaEye, FaDownload } from "react-icons/fa";
+import { formatDate } from "../utils/dateUtils";
 
 const rangeOptions = [
   { value: "all", label: "All" },
@@ -113,9 +115,7 @@ export default function Reports() {
     return filteredInvoices.flatMap((invoice) => {
       const customerName =
         customerMap.get(invoice.customerId)?.name || "Walk-in Customer";
-      const date = invoice.createdAt
-        ? new Date(invoice.createdAt).toLocaleDateString("en-GB")
-        : "-";
+      const date = invoice.createdAt ? formatDate(invoice.createdAt) : "-";
       const items = invoice.items || [];
 
       return items.map((item) => ({
@@ -128,6 +128,7 @@ export default function Reports() {
         meters: Number(item.meters || 0),
         pricePerMeter: Number(item.pricePerMeter || 0),
         lineTotal: Number(item.lineTotal || 0),
+        unit: item.unit || "",
       }));
     });
   }, [filteredInvoices, customerMap]);
@@ -185,17 +186,65 @@ export default function Reports() {
 
   return (
     <section className="reports-dashboard">
-      <div className="cards-3 reports-stats-grid">
-        <div className="panel report-stat-card">
-          <p className="muted">Invoice Count</p>
+      {/* Premium Header */}
+      <div className="sales-intel-head" style={{ marginBottom: "14px" }}>
+        <div>
+          <h3 style={{ fontSize: "16px", fontWeight: "700" }}>Report Intelligence</h3>
+          <p style={{ fontSize: "11px", color: "#64748b" }}>Comprehensive invoice history, customer selection ledger, and PDF reports.</p>
+        </div>
+        <div className="sales-hero-actions">
+          <button
+            type="button"
+            className="sales-icon-btn"
+            style={{
+              width: "auto",
+              padding: "8px 16px",
+              background: "#0d9488",
+              color: "#fff",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              borderRadius: "6px",
+              fontSize: "12px",
+              fontWeight: "700"
+            }}
+            onClick={downloadLeatherReportPdf}
+            disabled={downloadingLeatherPdf}
+          >
+            <FaDownload />
+            <span>
+              {downloadingLeatherPdf
+                ? "Preparing Leather Report..."
+                : "Download Leather Report"}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Styled Top Cards */}
+      <div className="sales-ledger-stats" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))", marginBottom: "14px" }}>
+        <div className="panel sales-stat-card">
+          <div className="sales-stat-top">
+            <span className="sales-stat-icon blue"><FaFileInvoice /></span>
+            <strong style={{ color: "#10b981" }}>Active</strong>
+          </div>
+          <p>Invoice Count</p>
           <h2>{filteredInvoices.length}</h2>
         </div>
-        <div className="panel report-stat-card">
-          <p className="muted">Revenue</p>
+        <div className="panel sales-stat-card">
+          <div className="sales-stat-top">
+            <span className="sales-stat-icon violet"><FaFileInvoiceDollar /></span>
+            <strong style={{ color: "#10b981" }}>Stable</strong>
+          </div>
+          <p>Revenue</p>
           <h2>{formatCurrency(revenue)}</h2>
         </div>
-        <div className="panel report-stat-card">
-          <p className="muted">Total Meters</p>
+        <div className="panel sales-stat-card">
+          <div className="sales-stat-top">
+            <span className="sales-stat-icon warm"><FaRuler /></span>
+            <strong style={{ color: "#10b981" }}>Active</strong>
+          </div>
+          <p>Total Meters</p>
           <h2>{leatherTotals.meters.toFixed(3)} MTR</h2>
         </div>
       </div>
@@ -216,8 +265,8 @@ export default function Reports() {
       </div>
 
       <div className="panel report-main-panel">
-        <div className="report-section-title">
-          <h3>Customer Invoice Report</h3>
+        <div className="report-section-title" style={{ borderBottom: "1px solid #f0efeb", paddingBottom: "10px", marginBottom: "10px" }}>
+          <h3 style={{ fontSize: "14px", fontWeight: "700" }}>Customer Invoice Report</h3>
         </div>
 
         <div className="report-customer-layout">
@@ -255,39 +304,58 @@ export default function Reports() {
           </div>
 
           <div className="report-invoice-panel">
-            <div className="report-actions-row">
-              <h4>Invoices (Click row to download PDF)</h4>
-              <button
-                type="button"
-                onClick={downloadLeatherReportPdf}
-                disabled={downloadingLeatherPdf}
-              >
-                {downloadingLeatherPdf
-                  ? "Preparing Leather Report..."
-                  : "Download Leather Report (All Customers)"}
-              </button>
+            <div className="sales-section-head" style={{ marginBottom: "14px", borderBottom: "1px solid #f0efeb", paddingBottom: "8px" }}>
+              <h3 style={{ fontSize: "14px", fontWeight: "700" }}>Invoices</h3>
+              <span className="sales-pill">{visibleInvoices.length} Found</span>
             </div>
-            {visibleInvoices.map((invoice) => (
-              <button
-                type="button"
-                key={invoice.id}
-                className="list-row list-row-btn"
-                onClick={() => handleInvoiceClick(invoice)}
-              >
-                <strong>{invoice.invoiceNo}</strong>
-                <span>
-                  {customerMap.get(invoice.customerId)?.name ||
-                    "Walk-in Customer"}
-                </span>
-                <span>{invoice.createdAt?.slice(0, 10)}</span>
-                <span>{formatCurrency(invoice.total)}</span>
-              </button>
-            ))}
-            {visibleInvoices.length === 0 && (
-              <p className="muted">
-                No invoices found for selected customer and filter.
-              </p>
-            )}
+            
+            <div className="sales-table">
+              <div className="sales-table-head" style={{ background: "#f8fafc", color: "#64748b", fontWeight: "700" }}>
+                <span>Invoice No</span>
+                <span>Customer</span>
+                <span>Date</span>
+                <span>Amount</span>
+                <span style={{ textAlign: "right" }}>Action</span>
+              </div>
+              {visibleInvoices.map((invoice) => (
+                <div className="sales-table-row" key={invoice.id}>
+                  <strong>{invoice.invoiceNo}</strong>
+                  <span>
+                    {customerMap.get(invoice.customerId)?.name ||
+                      "Walk-in Customer"}
+                  </span>
+                  <span>{formatDate(invoice.createdAt)}</span>
+                  <strong style={{ color: "#0f3f7a" }}>{formatCurrency(invoice.total)}</strong>
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <button
+                      type="button"
+                      className="sales-icon-btn"
+                      title="Download PDF"
+                      onClick={() => handleInvoiceClick(invoice)}
+                      style={{
+                        width: "30px",
+                        height: "30px",
+                        borderRadius: "6px",
+                        background: "#0f766e",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "#fff",
+                        border: "none",
+                        cursor: "pointer"
+                      }}
+                    >
+                      <FaEye />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {visibleInvoices.length === 0 && (
+                <p className="muted" style={{ padding: "16px", textAlign: "center" }}>
+                  No invoices found for selected customer and filter.
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>

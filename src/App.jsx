@@ -10,9 +10,12 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Update from "./pages/Update";
 import { useDispatch } from "react-redux";
-import { fetchCustomers } from "./store/slices/customerSlice";
-import { fetchProducts } from "./store/slices/productSlice";
-import { fetchInvoices } from "./store/slices/invoiceSlice";
+import logo from "./assets/VyaparOs.png";
+import { fetchCustomers, clearCustomers } from "./store/slices/customerSlice";
+import { fetchProducts, clearProducts } from "./store/slices/productSlice";
+import { fetchInvoices, clearInvoices } from "./store/slices/invoiceSlice";
+import { readAppSettings, writeAppSettings } from "./utils/appSettings";
+import SplashScreen from "./components/SplashScreen";
 
 const AUTH_USERS_KEY = "billing:auth-users";
 const AUTH_SESSION_KEY = "billing:auth-session";
@@ -48,6 +51,44 @@ const addDays = (date, days) => {
 const getUsers = () => readJson(AUTH_USERS_KEY, []);
 const saveUsers = (users) => localStorage.setItem(AUTH_USERS_KEY, JSON.stringify(users));
 
+const signupBusinessTypes = [
+  "Jewellery",
+  "Textile",
+  "Grocery",
+  "Hardware",
+  "DTF Printing",
+  "Electronics",
+  "Pharmacy",
+  "Furniture",
+  "Automobile Parts",
+  "Restaurant",
+  "Bakery",
+  "Cafe",
+  "Mobile Shop",
+  "Computer",
+  "Paint Shop",
+  "Steel",
+  "Tiles & Marble",
+  "Plywood",
+  "Stationery",
+  "Book Store",
+  "Gift Shop",
+  "Footwear",
+  "Boutique",
+  "Tailor",
+  "Optical",
+  "Sweet Mart",
+  "Dairy",
+  "Clinic",
+  "Hospital",
+  "Diagnostic",
+  "IT Company",
+  "Digital Marketing",
+  "Consultancy",
+  "Gym",
+  "Beauty Salon"
+];
+
 function AuthScreen({ onAuthenticated }) {
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState({
@@ -55,6 +96,7 @@ function AuthScreen({ onAuthenticated }) {
     businessName: "",
     email: "",
     password: "",
+    businessType: ""
   });
   const [message, setMessage] = useState("");
 
@@ -71,6 +113,10 @@ function AuthScreen({ onAuthenticated }) {
     }
 
     if (mode === "signup") {
+      if (!form.businessType) {
+        setMessage("Please select a business type / industry.");
+        return;
+      }
       if (users.some((user) => user.email === email)) {
         setMessage("Account already exists. Please login.");
         return;
@@ -82,6 +128,7 @@ function AuthScreen({ onAuthenticated }) {
         businessName: form.businessName.trim() || "Artisanal Shop",
         email,
         password: form.password,
+        businessType: form.businessType,
         trialStartedAt: new Date().toISOString(),
         trialEndsAt: addDays(new Date(), TRIAL_DAYS),
         paymentStatus: "trial",
@@ -89,7 +136,7 @@ function AuthScreen({ onAuthenticated }) {
       };
       saveUsers([user, ...users]);
       localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({ userId: user.id }));
-      onAuthenticated(user);
+      onAuthenticated(user, form.businessName.trim(), form.businessType);
       return;
     }
 
@@ -107,20 +154,43 @@ function AuthScreen({ onAuthenticated }) {
     <main className="auth-shell">
       <section className="auth-panel">
         <div className="auth-brand">
-          <strong>Fluent Ledger</strong>
-          <span>The Precision Atelier</span>
+          <img src={logo} alt="VyapaarOS Logo" className="auth-logo" />
+          <div>
+            <strong>VyapaarOS</strong>
+            <span>The Precision Atelier</span>
+          </div>
         </div>
         <div>
           <p className="muted">{mode === "login" ? "Welcome back" : "Start your free trial"}</p>
-          <h1>{mode === "login" ? "Login to Billing Sys" : "Create your account"}</h1>
+          <h1>{mode === "login" ? "Login to VyapaarOS" : "Create your account"}</h1>
           <p className="auth-copy">Use the full billing software free for 2 months. Payment is required after the trial ends.</p>
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           {mode === "signup" ? (
             <>
-              <input value={form.name} onChange={(event) => updateForm({ name: event.target.value })} placeholder="Owner name" />
-              <input value={form.businessName} onChange={(event) => updateForm({ businessName: event.target.value })} placeholder="Business name" />
+              <input required value={form.name} onChange={(event) => updateForm({ name: event.target.value })} placeholder="Owner name *" />
+              <input required value={form.businessName} onChange={(event) => updateForm({ businessName: event.target.value })} placeholder="Business name *" />
+              <select
+                required
+                value={form.businessType || ""}
+                onChange={(event) => updateForm({ businessType: event.target.value })}
+                style={{
+                  width: "100%",
+                  padding: "9px 10px",
+                  borderRadius: "8px",
+                  border: "1px solid var(--border)",
+                  background: "var(--input-bg, #fff)",
+                  font: "inherit",
+                  color: "inherit",
+                  marginBottom: "8px"
+                }}
+              >
+                <option value="" disabled>Select Business Type / Industry *</option>
+                {signupBusinessTypes.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
             </>
           ) : null}
           <input type="email" value={form.email} onChange={(event) => updateForm({ email: event.target.value })} placeholder="Email address" />
@@ -147,18 +217,21 @@ function PaymentGate({ user, onPaymentComplete, onLogout }) {
     <main className="auth-shell payment-shell">
       <section className="auth-panel payment-panel">
         <div className="auth-brand">
-          <strong>Fluent Ledger</strong>
-          <span>License & Payment</span>
+          <img src={logo} alt="VyapaarOS Logo" className="auth-logo" />
+          <div>
+            <strong>VyapaarOS</strong>
+            <span>License & Payment</span>
+          </div>
         </div>
         <div>
           <p className="muted">{user.businessName}</p>
           <h1>{isExpired ? "Trial expired" : `${daysLeft} trial days left`}</h1>
           <p className="auth-copy">
-            Your account gets a 2 month free trial. After the trial, complete payment to continue using Billing Sys.
+            Your account gets a 2 month free trial. After the trial, complete payment to continue using VyapaarOS.
           </p>
         </div>
         <div className="payment-summary">
-          <p><span>Plan</span><strong>Billing Sys Pro</strong></p>
+          <p><span>Plan</span><strong>VyapaarOS Pro</strong></p>
           <p><span>Trial ends</span><strong>{trialEndsAt.toLocaleDateString("en-IN")}</strong></p>
           <p><span>Amount</span><strong>₹4,999 / year</strong></p>
         </div>
@@ -173,7 +246,8 @@ function PaymentGate({ user, onPaymentComplete, onLogout }) {
 }
 
 export default function App() {
-  const [activePage, setActivePage] = useState("sales");
+  const [isSplashLoading, setIsSplashLoading] = useState(true);
+  const [activePage, setActivePage] = useState("sales-dashboard");
   const [currentUser, setCurrentUser] = useState(() => {
     const session = readJson(AUTH_SESSION_KEY, null);
     if (!session?.userId) return null;
@@ -192,10 +266,12 @@ export default function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(fetchCustomers());
-    dispatch(fetchProducts());
-    dispatch(fetchInvoices());
-  }, [dispatch]);
+    if (currentUser?.id) {
+      dispatch(fetchCustomers(currentUser.id));
+      dispatch(fetchProducts(currentUser.id));
+      dispatch(fetchInvoices(currentUser.id));
+    }
+  }, [dispatch, currentUser?.id]);
 
   useEffect(() => {
     if (!window.billingAPI?.app) return;
@@ -292,7 +368,12 @@ export default function App() {
     updateState.status
   );
 
-  const ActivePage = useMemo(() => pageMap[activePage] || Dashboard, [activePage]);
+  const ActivePage = useMemo(() => {
+    if (activePage.startsWith("sales")) {
+      return Sales;
+    }
+    return pageMap[activePage] || Dashboard;
+  }, [activePage]);
   const licenseBlocked = currentUser
     ? currentUser.paymentStatus === "paid"
       ? currentUser.paidUntil && new Date(currentUser.paidUntil).getTime() <= Date.now()
@@ -300,6 +381,9 @@ export default function App() {
     : false;
 
   const handleLogout = () => {
+    dispatch(clearCustomers());
+    dispatch(clearProducts());
+    dispatch(clearInvoices());
     localStorage.removeItem(AUTH_SESSION_KEY);
     setCurrentUser(null);
   };
@@ -315,8 +399,27 @@ export default function App() {
     setCurrentUser(nextUser);
   };
 
+  const handleAuthenticated = async (user, signupBusinessName, signupBusinessType) => {
+    if (signupBusinessType) {
+      const current = await readAppSettings();
+      await writeAppSettings({
+        ...current,
+        companyName: signupBusinessName || user.businessName,
+        businessType: signupBusinessType
+      });
+      setActivePage("settings");
+    } else {
+      setActivePage("sales-dashboard");
+    }
+    setCurrentUser(user);
+  };
+
+  if (isSplashLoading) {
+    return <SplashScreen onFinished={() => setIsSplashLoading(false)} />;
+  }
+
   if (!currentUser) {
-    return <AuthScreen onAuthenticated={setCurrentUser} />;
+    return <AuthScreen onAuthenticated={handleAuthenticated} />;
   }
 
   if (licenseBlocked) {
@@ -331,7 +434,14 @@ export default function App() {
         showUpdateDot={showUpdateDot}
       />
       <div className="workspace">
-        <Navbar title={activePage.toUpperCase()} appVersion={appVersion} onLogout={handleLogout} user={currentUser} />
+        <Navbar 
+          title={activePage.toUpperCase()} 
+          appVersion={appVersion} 
+          onLogout={handleLogout} 
+          user={currentUser} 
+          showUpdateDot={showUpdateDot}
+          onChangePage={setActivePage}
+        />
         <main className="content">
           {activePage === "update" ? (
             <Update
@@ -341,7 +451,7 @@ export default function App() {
               onInstallUpdate={handleInstallUpdate}
             />
           ) : (
-            <ActivePage />
+            <ActivePage activePage={activePage} onChangePage={setActivePage} user={currentUser} />
           )}
         </main>
       </div>

@@ -2,13 +2,13 @@ import { useDispatch, useSelector } from "react-redux";
 import CustomerForm from "../components/CustomerForm";
 import { addCustomer, fetchCustomers } from "../store/slices/customerSlice";
 
-export default function Customers() {
+export default function Customers({ user }) {
   const dispatch = useDispatch();
   const customers = useSelector((state) => state.customer.items);
 
   const handleAdd = async (payload) => {
-    await dispatch(addCustomer(payload));
-    dispatch(fetchCustomers());
+    await dispatch(addCustomer({ payload, userId: user?.id }));
+    dispatch(fetchCustomers(user?.id));
   };
 
   return (
