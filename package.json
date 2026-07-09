@@ -1,6 +1,6 @@
 {
   "name": "Vyapar-Bill",
-  "version": "2.4.3",
+  "version": "2.4.4",
   "description": "Desktop billing software with Electron + React + SQLite",
   "author": "Nirav Vasani",
   "main": "electron-main.js",
@@ -48,7 +48,8 @@
     ],
     "asar": true,
     "asarUnpack": [
-      "node_modules/better-sqlite3/**/*"
+      "node_modules/better-sqlite3/**/*",
+      "backend/cloud-auth/**/*"
     ],
     "directories": {
       "output": "release"
