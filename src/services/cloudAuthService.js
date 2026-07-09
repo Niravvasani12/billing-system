@@ -9,10 +9,11 @@ const TRIAL_DAYS = 60;
 const OWNER_EMAILS = ["info.vyapparos@gmail.com", "info.vyapaaros@gmail.com"];
 const DEFAULT_OWNER_EMAIL = "info.vyapparos@gmail.com";
 const LOCAL_OWNER_DEV_PASSWORD_KEY = "vyapaaros:local-owner-dev-password";
+const DEFAULT_CLOUD_AUTH_URL = "https://billing-system-8jll.onrender.com";
 const CLOUD_AUTH_URL =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_CLOUD_AUTH_URL) ||
   localStorage.getItem("vyapaaros:cloud-auth-url") ||
-  "http://localhost:8080";
+  ((typeof import.meta !== "undefined" && import.meta.env?.DEV) ? "http://localhost:8080" : DEFAULT_CLOUD_AUTH_URL);
 
 const readJson = (key, fallback) => {
   try {
