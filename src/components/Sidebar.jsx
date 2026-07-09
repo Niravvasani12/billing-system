@@ -1,16 +1,20 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
-  FaFileInvoice,
-  FaUsers,
-  FaTachometerAlt,
   FaBox,
   FaChartBar,
   FaCog,
   FaDownload,
+  FaFileInvoice,
   FaReceipt,
+  FaShoppingCart,
+  FaTachometerAlt,
+  FaUserShield,
+  FaUsers,
+  FaWarehouse,
 } from "react-icons/fa";
 import logo from "../assets/VyaparOs.png";
 import { useAppSettings } from "../utils/appSettings";
+import { cloudAuth } from "../services/cloudAuthService";
 
 const getInitials = (name = "") =>
   name
@@ -43,6 +47,35 @@ const links = [
     ],
   },
   {
+    id: "purchase",
+    label: "Purchase",
+    icon: <FaShoppingCart />,
+    tone: "tone-purchase",
+    subLinks: [
+      { id: "purchase-dashboard", label: "Purchase Dashboard" },
+      { id: "purchase-invoice", label: "Tax Invoice" },
+      { id: "purchase-creditNote", label: "Credit Note" },
+      { id: "purchase-debitNote", label: "Debit Note" },
+      { id: "purchase-quotation", label: "Quotation" },
+    ],
+  },
+  {
+    id: "inventory",
+    label: "Inventory",
+    icon: <FaWarehouse />,
+    tone: "tone-inventory",
+    subLinks: [
+      { id: "inventory", label: "Inventory Dashboard" },
+      { id: "inventory-opening-main", label: "Opening Stock" },
+      { id: "inventory-opening-add", label: "Add Opening Stock" },
+      { id: "inventory-opening-list", label: "Opening Stock List" },
+      { id: "inventory-purchase-entry", label: "Purchase Stock Entry" },
+      { id: "inventory-sales-entry", label: "Sales Stock Entry" },
+      { id: "inventory-stock-list", label: "Stock List" },
+      { id: "inventory-stock-adjustment", label: "Stock Adjustment" },
+    ],
+  },
+  {
     id: "customers",
     label: "Customers",
     icon: <FaUsers />,
@@ -62,18 +95,26 @@ const links = [
     tone: "tone-reports",
   },
   { id: "settings", label: "Settings", icon: <FaCog />, tone: "tone-settings" },
+  { id: "admin", label: "Admin Panel", icon: <FaUserShield />, tone: "tone-admin", ownerOnly: true },
   { id: "update", label: "Update", icon: <FaDownload />, tone: "tone-update" },
 ];
 
-export default function Sidebar({ activePage, onChange, showUpdateDot }) {
+export default function Sidebar({ activePage, onChange, showUpdateDot, user }) {
   const { settings } = useAppSettings();
-  const [salesExpanded, setSalesExpanded] = useState(() => {
-    return activePage.startsWith("sales");
-  });
+  const isOwner = cloudAuth.isOwnerUser(user);
+  const [salesExpanded, setSalesExpanded] = useState(() => activePage.startsWith("sales"));
+  const [purchaseExpanded, setPurchaseExpanded] = useState(() => activePage.startsWith("purchase"));
+  const [inventoryExpanded, setInventoryExpanded] = useState(() => activePage.startsWith("inventory"));
 
   useEffect(() => {
     if (activePage.startsWith("sales")) {
       setSalesExpanded(true);
+    }
+    if (activePage.startsWith("purchase")) {
+      setPurchaseExpanded(true);
+    }
+    if (activePage.startsWith("inventory")) {
+      setInventoryExpanded(true);
     }
   }, [activePage]);
 
@@ -87,27 +128,43 @@ export default function Sidebar({ activePage, onChange, showUpdateDot }) {
         </div>
       </div>
       <div className="sidebar-nav">
-        {links.map((link) => {
+        {links.filter((link) => !link.ownerOnly || isOwner).map((link) => {
           const isSales = link.id === "sales";
-          const isActive = activePage === link.id || (isSales && activePage.startsWith("sales"));
+          const isPurchase = link.id === "purchase";
+          const isInventory = link.id === "inventory";
+          const isExpandable = isSales || isPurchase || isInventory;
+          const isExpanded = isSales ? salesExpanded : isPurchase ? purchaseExpanded : inventoryExpanded;
+          const isActive =
+            activePage === link.id ||
+            (isSales && activePage.startsWith("sales")) ||
+            (isPurchase && activePage.startsWith("purchase")) ||
+            (isInventory && activePage.startsWith("inventory"));
 
           return (
             <div key={link.id} className="nav-group">
               <button
-                className={
-                  isActive
-                    ? `nav-btn active ${link.tone}`
-                    : `nav-btn ${link.tone}`
-                }
+                className={isActive ? `nav-btn active ${link.tone}` : `nav-btn ${link.tone}`}
                 onClick={() => {
                   if (isSales) {
                     setSalesExpanded(!salesExpanded);
                     if (activePage === "sales" || !activePage.startsWith("sales-")) {
                       onChange("sales-dashboard");
                     }
-                  } else {
-                    onChange(link.id);
+                    return;
                   }
+                  if (isPurchase) {
+                    setPurchaseExpanded(!purchaseExpanded);
+                    if (activePage === "purchase" || !activePage.startsWith("purchase-")) {
+                      onChange("purchase-dashboard");
+                    }
+                    return;
+                  }
+                  if (isInventory) {
+                    setInventoryExpanded(!inventoryExpanded);
+                    onChange("inventory");
+                    return;
+                  }
+                  onChange(link.id);
                 }}
               >
                 <span className="nav-btn-label">
@@ -116,14 +173,14 @@ export default function Sidebar({ activePage, onChange, showUpdateDot }) {
                   </span>
                   <span className="nav-text">{link.label}</span>
                 </span>
-                {isSales ? (
-                  <span style={{ fontSize: "8px", opacity: 0.8 }}>{salesExpanded ? "▼" : "▶"}</span>
+                {isExpandable ? (
+                  <span style={{ fontSize: "8px", opacity: 0.8 }}>{isExpanded ? "▼" : "▶"}</span>
                 ) : link.id === "update" && showUpdateDot ? (
                   <span className="nav-dot" />
                 ) : null}
               </button>
 
-              {isSales && salesExpanded && (
+              {isExpandable && isExpanded ? (
                 <div className="sidebar-sub-nav">
                   {link.subLinks.map((sub) => {
                     const isSubActive = activePage === sub.id;
@@ -139,7 +196,7 @@ export default function Sidebar({ activePage, onChange, showUpdateDot }) {
                     );
                   })}
                 </div>
-              )}
+              ) : null}
             </div>
           );
         })}
@@ -148,7 +205,15 @@ export default function Sidebar({ activePage, onChange, showUpdateDot }) {
         <button
           type="button"
           className="sidebar-new-btn"
-          onClick={() => onChange("sales-taxInvoice")}
+          onClick={() => {
+            if (activePage.startsWith("purchase")) {
+              onChange("purchase-invoice");
+            } else if (activePage.startsWith("inventory")) {
+              onChange("inventory-opening-add");
+            } else {
+              onChange("sales-taxInvoice");
+            }
+          }}
         >
           + New Transaction
         </button>

@@ -4,11 +4,14 @@ import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
 import Billing from "./pages/Billing";
 import Sales from "./pages/Sales";
+import Purchase from "./pages/Purchase";
+import Inventory from "./pages/Inventory";
 import Customers from "./pages/Customers";
 import Products from "./pages/Products";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Update from "./pages/Update";
+import AdminPanel from "./pages/AdminPanel";
 import { useDispatch } from "react-redux";
 import logo from "./assets/VyaparOs.png";
 import { fetchCustomers, clearCustomers } from "./store/slices/customerSlice";
@@ -16,6 +19,7 @@ import { fetchProducts, clearProducts } from "./store/slices/productSlice";
 import { fetchInvoices, clearInvoices } from "./store/slices/invoiceSlice";
 import { readAppSettings, writeAppSettings } from "./utils/appSettings";
 import SplashScreen from "./components/SplashScreen";
+import { cloudAuth } from "./services/cloudAuthService";
 
 const AUTH_USERS_KEY = "billing:auth-users";
 const AUTH_SESSION_KEY = "billing:auth-session";
@@ -24,12 +28,15 @@ const TRIAL_DAYS = 60;
 const pageMap = {
   billing: Billing,
   sales: Sales,
+  purchase: Purchase,
+  inventory: Inventory,
   customers: Customers,
   dashboard: Dashboard,
   products: Products,
   reports: Reports,
   settings: Settings,
   update: Update,
+  admin: AdminPanel,
 };
 const UPDATE_ALERT_KEY = "billing:update-alert";
 const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
@@ -48,8 +55,8 @@ const addDays = (date, days) => {
   return next.toISOString();
 };
 
-const getUsers = () => readJson(AUTH_USERS_KEY, []);
-const saveUsers = (users) => localStorage.setItem(AUTH_USERS_KEY, JSON.stringify(users));
+const getUsers = () => cloudAuth.listUsers();
+const saveUsers = (users) => cloudAuth.saveUsers(users);
 
 const signupBusinessTypes = [
   "Jewellery",
@@ -91,63 +98,85 @@ const signupBusinessTypes = [
 
 function AuthScreen({ onAuthenticated }) {
   const [mode, setMode] = useState("login");
+  const [otpState, setOtpState] = useState(null);
   const [form, setForm] = useState({
     name: "",
     businessName: "",
     email: "",
     password: "",
-    businessType: ""
+    businessType: "",
+    otp: ""
   });
   const [message, setMessage] = useState("");
 
   const updateForm = (patch) => setForm((prev) => ({ ...prev, ...patch }));
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    const users = getUsers();
     const email = form.email.trim().toLowerCase();
 
-    if (!email || !form.password) {
-      setMessage("Email and password are required.");
+    if (!email) {
+      setMessage("Email address is required.");
       return;
     }
 
     if (mode === "signup") {
-      if (!form.businessType) {
-        setMessage("Please select a business type / industry.");
+      if (!form.password) {
+        setMessage("Password is required.");
         return;
       }
-      if (users.some((user) => user.email === email)) {
-        setMessage("Account already exists. Please login.");
+      if (!otpState || otpState.email !== email || otpState.purpose !== "signup") {
+        try {
+          const otp = await cloudAuth.requestOtp(email, "signup");
+          setOtpState({ email, purpose: "signup", code: otp.code });
+          setMessage(otp.code ? `OTP sent to ${email}. Desktop test OTP: ${otp.code}` : `OTP sent to ${email}.`);
+        } catch (error) {
+          setMessage(error.message);
+        }
         return;
       }
 
-      const user = {
-        id: `user-${Date.now()}`,
-        name: form.name.trim() || "Shopkeeper",
-        businessName: form.businessName.trim() || "Artisanal Shop",
-        email,
-        password: form.password,
-        businessType: form.businessType,
-        trialStartedAt: new Date().toISOString(),
-        trialEndsAt: addDays(new Date(), TRIAL_DAYS),
-        paymentStatus: "trial",
-        paidUntil: null,
-      };
-      saveUsers([user, ...users]);
-      localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({ userId: user.id }));
-      onAuthenticated(user, form.businessName.trim(), form.businessType);
+      try {
+        const user = await cloudAuth.signup({ ...form, otp: form.otp });
+        onAuthenticated(user, form.businessName.trim(), form.businessType || "General");
+      } catch (error) {
+        setMessage(error.message);
+      }
       return;
     }
 
-    const user = users.find((item) => item.email === email && item.password === form.password);
-    if (!user) {
-      setMessage("Invalid login details.");
+    if (mode === "otp") {
+      if (!otpState || otpState.email !== email || otpState.purpose !== "login") {
+        try {
+          const otp = await cloudAuth.requestOtp(email, "login");
+          setOtpState({ email, purpose: "login" });
+          setMessage(otp.code ? `OTP sent for login. Desktop test OTP: ${otp.code}` : "OTP sent to your email.");
+        } catch (error) {
+          setMessage(error.message);
+        }
+        return;
+      }
+
+      try {
+        const user = await cloudAuth.loginWithOtp(email, form.otp);
+        onAuthenticated(user);
+      } catch (error) {
+        setMessage(error.message);
+      }
       return;
     }
 
-    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify({ userId: user.id }));
-    onAuthenticated(user);
+    if (!form.password) {
+      setMessage("Password is required.");
+      return;
+    }
+
+    try {
+      const user = await cloudAuth.login(email, form.password);
+      onAuthenticated(user);
+    } catch (error) {
+      setMessage(error.message);
+    }
   };
 
   return (
@@ -161,9 +190,9 @@ function AuthScreen({ onAuthenticated }) {
           </div>
         </div>
         <div>
-          <p className="muted">{mode === "login" ? "Welcome back" : "Start your free trial"}</p>
-          <h1>{mode === "login" ? "Login to VyapaarOS" : "Create your account"}</h1>
-          <p className="auth-copy">Use the full billing software free for 2 months. Payment is required after the trial ends.</p>
+          <p className="muted">{mode === "signup" ? "Start your free trial" : mode === "otp" ? "OTP login" : "Welcome back"}</p>
+          <h1>{mode === "signup" ? "Create your account" : mode === "otp" ? "Login with OTP" : "Login to VyapaarOS"}</h1>
+          <p className="auth-copy">Cloud authentication stores users, licenses, and device binding for shopkeeper desktop accounts.</p>
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
@@ -171,36 +200,34 @@ function AuthScreen({ onAuthenticated }) {
             <>
               <input required value={form.name} onChange={(event) => updateForm({ name: event.target.value })} placeholder="Owner name *" />
               <input required value={form.businessName} onChange={(event) => updateForm({ businessName: event.target.value })} placeholder="Business name *" />
-              <select
-                required
-                value={form.businessType || ""}
-                onChange={(event) => updateForm({ businessType: event.target.value })}
-                style={{
-                  width: "100%",
-                  padding: "9px 10px",
-                  borderRadius: "8px",
-                  border: "1px solid var(--border)",
-                  background: "var(--input-bg, #fff)",
-                  font: "inherit",
-                  color: "inherit",
-                  marginBottom: "8px"
-                }}
-              >
-                <option value="" disabled>Select Business Type / Industry *</option>
-                {signupBusinessTypes.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
             </>
           ) : null}
           <input type="email" value={form.email} onChange={(event) => updateForm({ email: event.target.value })} placeholder="Email address" />
-          <input type="password" value={form.password} onChange={(event) => updateForm({ password: event.target.value })} placeholder="Password" />
+          {mode !== "otp" ? (
+            <input type="password" value={form.password} onChange={(event) => updateForm({ password: event.target.value })} placeholder="Password" />
+          ) : null}
+          {(mode === "otp" || (mode === "signup" && otpState?.purpose === "signup" && otpState.email === form.email.trim().toLowerCase())) ? (
+            <input value={form.otp} onChange={(event) => updateForm({ otp: event.target.value })} placeholder="Enter 6 digit OTP" />
+          ) : null}
           {message ? <p className="auth-message">{message}</p> : null}
-          <button type="submit">{mode === "login" ? "Login" : "Create Account"}</button>
+          <button type="submit">
+            {mode === "signup"
+              ? otpState?.purpose === "signup" && otpState.email === form.email.trim().toLowerCase()
+                ? "Verify OTP & Activate Account"
+                : "Create Account"
+              : mode === "otp"
+                ? otpState?.purpose === "login" && otpState.email === form.email.trim().toLowerCase()
+                  ? "Verify OTP & Login"
+                  : "Send Login OTP"
+                : "Login"}
+          </button>
         </form>
 
-        <button type="button" className="auth-switch" onClick={() => setMode(mode === "login" ? "signup" : "login")}>
-          {mode === "login" ? "New user? Sign up" : "Already have account? Login"}
+        <button type="button" className="auth-switch" onClick={() => { setMode(mode === "signup" ? "login" : "signup"); setMessage(""); setOtpState(null); }}>
+          {mode === "signup" ? "Already have account? Login" : "New user? Sign up"}
+        </button>
+        <button type="button" className="auth-switch" onClick={() => { setMode(mode === "otp" ? "login" : "otp"); setMessage(""); setOtpState(null); }}>
+          {mode === "otp" ? "Use password login" : "Login with OTP"}
         </button>
       </section>
     </main>
@@ -272,6 +299,12 @@ export default function App() {
       dispatch(fetchInvoices(currentUser.id));
     }
   }, [dispatch, currentUser?.id]);
+
+  useEffect(() => {
+    if (cloudAuth.isOwnerUser(currentUser)) {
+      setActivePage("admin");
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     if (!window.billingAPI?.app) return;
@@ -372,6 +405,12 @@ export default function App() {
     if (activePage.startsWith("sales")) {
       return Sales;
     }
+    if (activePage.startsWith("purchase")) {
+      return Purchase;
+    }
+    if (activePage.startsWith("inventory")) {
+      return Inventory;
+    }
     return pageMap[activePage] || Dashboard;
   }, [activePage]);
   const licenseBlocked = currentUser
@@ -379,6 +418,7 @@ export default function App() {
       ? currentUser.paidUntil && new Date(currentUser.paidUntil).getTime() <= Date.now()
       : new Date(currentUser.trialEndsAt).getTime() <= Date.now()
     : false;
+  const isOwnerUser = cloudAuth.isOwnerUser(currentUser);
 
   const handleLogout = () => {
     dispatch(clearCustomers());
@@ -389,17 +429,20 @@ export default function App() {
   };
 
   const handlePaymentComplete = () => {
-    const nextUser = {
-      ...currentUser,
+    const nextUser = cloudAuth.updateLicense(currentUser.id, {
       paymentStatus: "paid",
       paidUntil: addDays(new Date(), 365),
-    };
-    const users = getUsers().map((user) => (user.id === nextUser.id ? nextUser : user));
-    saveUsers(users);
+    });
     setCurrentUser(nextUser);
   };
 
   const handleAuthenticated = async (user, signupBusinessName, signupBusinessType) => {
+    if (cloudAuth.isOwnerUser(user)) {
+      setActivePage("admin");
+      setCurrentUser(user);
+      return;
+    }
+
     if (signupBusinessType) {
       const current = await readAppSettings();
       await writeAppSettings({
@@ -422,8 +465,12 @@ export default function App() {
     return <AuthScreen onAuthenticated={handleAuthenticated} />;
   }
 
-  if (licenseBlocked) {
+  if (licenseBlocked && !isOwnerUser) {
     return <PaymentGate user={currentUser} onPaymentComplete={handlePaymentComplete} onLogout={handleLogout} />;
+  }
+
+  if (activePage === "admin") {
+    return <AdminPanel user={currentUser} onLogout={handleLogout} />;
   }
 
   return (
@@ -432,6 +479,7 @@ export default function App() {
         activePage={activePage}
         onChange={setActivePage}
         showUpdateDot={showUpdateDot}
+        user={currentUser}
       />
       <div className="workspace">
         <Navbar 

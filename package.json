@@ -1,6 +1,6 @@
 {
   "name": "Vyapar-Bill",
-  "version": "2.4.2",
+  "version": "2.4.3",
   "description": "Desktop billing software with Electron + React + SQLite",
   "author": "Nirav Vasani",
   "main": "electron-main.js",

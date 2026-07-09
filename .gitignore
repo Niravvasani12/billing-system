@@ -11,3 +11,6 @@ dist/
 *.exe
 *.zip
 .env
+.env.*
+!.env.example
+backend/cloud-auth/.env
