@@ -353,7 +353,12 @@ app.post("/auth/signup", asyncRoute(async (req, res) => {
 
 app.post("/auth/login", asyncRoute(async (req, res) => {
   const email = String(req.body.email || "").trim().toLowerCase();
-  const user = await User.findOne({ email, passwordHash: hash(req.body.password) });
+  const passwordHash = hash(req.body.password);
+  let user = await User.findOne({ email, passwordHash });
+  if (!user && email === ownerEmail && ownerPassword && String(req.body.password) === ownerPassword) {
+    await ensureOwnerAccount();
+    user = await User.findOne({ email, passwordHash });
+  }
   if (!user) return res.status(401).json({ message: "Invalid login details." });
   if (user.accountStatus === "blocked") return res.status(403).json({ message: "Your account has been temporarily blocked. Please contact the administrator." });
   if (user.accountStatus === "inactive") return res.status(403).json({ message: "Your account is inactive. Please contact the administrator." });
