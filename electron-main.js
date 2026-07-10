@@ -15,6 +15,14 @@ const UPDATE_CHECK_INTERVAL_MS = 1000 * 60 * 60 * 4;
 let mainWindow = null;
 let cloudAuthProcess = null;
 
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught main process error:", error);
+});
+
+process.on("unhandledRejection", (error) => {
+  console.error("Unhandled main process rejection:", error);
+});
+
 function sendUpdateStatus(payload) {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send(UPDATE_STATUS_CHANNEL, payload);
@@ -121,22 +129,32 @@ function startCloudAuthServer() {
   }
 
   const serverDir = path.dirname(serverPath);
-  cloudAuthProcess = fork(serverPath, [], {
-    cwd: serverDir,
-    env: {
-      ...process.env,
-      ELECTRON_RUN_AS_NODE: "1",
-      PORT: process.env.PORT || "8080",
-      ALLOWED_ORIGIN: process.env.ALLOWED_ORIGIN || "*",
-    },
-    silent: true,
-  });
+  try {
+    cloudAuthProcess = fork(serverPath, [], {
+      cwd: serverDir,
+      env: {
+        ...process.env,
+        ELECTRON_RUN_AS_NODE: "1",
+        PORT: process.env.PORT || "8080",
+        ALLOWED_ORIGIN: process.env.ALLOWED_ORIGIN || "*",
+      },
+      silent: true,
+    });
+  } catch (error) {
+    console.error("Failed to start cloud auth server:", error);
+    cloudAuthProcess = null;
+    return;
+  }
 
   cloudAuthProcess.stdout?.on("data", (data) => {
     console.log(`[cloud-auth] ${String(data).trim()}`);
   });
   cloudAuthProcess.stderr?.on("data", (data) => {
     console.error(`[cloud-auth] ${String(data).trim()}`);
+  });
+  cloudAuthProcess.on("error", (error) => {
+    console.error("Cloud auth server process failed:", error);
+    cloudAuthProcess = null;
   });
   cloudAuthProcess.on("exit", (code, signal) => {
     console.log(`[cloud-auth] stopped code=${code ?? "null"} signal=${signal ?? "null"}`);

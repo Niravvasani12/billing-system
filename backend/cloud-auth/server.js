@@ -11,8 +11,7 @@ try {
   nodemailer = null;
 }
 
-const loadEnvFile = () => {
-  const envPath = path.join(__dirname, ".env");
+const loadEnvFile = (envPath) => {
   if (!fs.existsSync(envPath)) return;
   const lines = fs.readFileSync(envPath, "utf8").split(/\r?\n/);
   lines.forEach((line) => {
@@ -28,7 +27,34 @@ const loadEnvFile = () => {
   });
 };
 
-loadEnvFile();
+const loadEnvFiles = () => {
+  const candidates = [
+    path.join(__dirname, ".env"),
+    path.join(process.cwd(), ".env"),
+    path.join(process.resourcesPath || "", "app.asar.unpacked", "backend", "cloud-auth", ".env"),
+    path.join(process.resourcesPath || "", "app", "backend", "cloud-auth", ".env"),
+  ];
+  const seen = new Set();
+  candidates.forEach((candidate) => {
+    if (!candidate || seen.has(candidate)) return;
+    seen.add(candidate);
+    loadEnvFile(candidate);
+  });
+};
+
+loadEnvFiles();
+
+process.on("unhandledRejection", (error) => {
+  console.error("Unhandled cloud auth error:", error);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught cloud auth error:", error);
+});
+
+const asyncRoute = (handler) => (req, res, next) => {
+  Promise.resolve(handler(req, res, next)).catch(next);
+};
 
 const app = express();
 app.use(express.json());
@@ -261,7 +287,7 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true, service: "vyapaaros-cloud-auth" });
 });
 
-app.post("/auth/request-otp", async (req, res) => {
+app.post("/auth/request-otp", asyncRoute(async (req, res) => {
   const email = String(req.body.email || "").trim().toLowerCase();
   if (!email) return res.status(400).json({ message: "Email is required." });
   const code = String(Math.floor(100000 + Math.random() * 900000));
@@ -273,9 +299,9 @@ app.post("/auth/request-otp", async (req, res) => {
   });
   const delivery = await sendOtpEmail(email, code, req.body.purpose || "login");
   res.json({ ok: true, sentToEmail: delivery.sent, devOtp: delivery.sent ? undefined : code });
-});
+}));
 
-app.post("/auth/signup", async (req, res) => {
+app.post("/auth/signup", asyncRoute(async (req, res) => {
   const email = String(req.body.email || "").trim().toLowerCase();
   const otp = await Otp.findOne({ email, codeHash: hash(req.body.otp), status: "sent", expiresAt: { $gt: new Date() } });
   if (!otp) return res.status(401).json({ message: "Invalid or expired OTP." });
@@ -308,9 +334,9 @@ app.post("/auth/signup", async (req, res) => {
   otp.status = "verified";
   await otp.save();
   res.json({ user: serializeUser(user), license });
-});
+}));
 
-app.post("/auth/login", async (req, res) => {
+app.post("/auth/login", asyncRoute(async (req, res) => {
   const email = String(req.body.email || "").trim().toLowerCase();
   const user = await User.findOne({ email, passwordHash: hash(req.body.password) });
   if (!user) return res.status(401).json({ message: "Invalid login details." });
@@ -321,9 +347,9 @@ app.post("/auth/login", async (req, res) => {
   await user.save();
   const license = await License.findOne({ userId: user._id });
   res.json({ user: serializeUser(user), license });
-});
+}));
 
-app.post("/auth/login-otp", async (req, res) => {
+app.post("/auth/login-otp", asyncRoute(async (req, res) => {
   const email = String(req.body.email || "").trim().toLowerCase();
   const otp = await Otp.findOne({ email, codeHash: hash(req.body.otp), status: "sent", expiresAt: { $gt: new Date() } });
   if (!otp) return res.status(401).json({ message: "Invalid or expired OTP." });
@@ -338,14 +364,14 @@ app.post("/auth/login-otp", async (req, res) => {
   await otp.save();
   const license = await License.findOne({ userId: user._id });
   res.json({ user: serializeUser(user), license });
-});
+}));
 
-app.get("/admin/users", async (_req, res) => res.json(await User.find().sort({ createdAt: -1 })));
-app.get("/admin/licenses", async (_req, res) => res.json(await License.find().sort({ updatedAt: -1 })));
-app.get("/admin/devices", async (_req, res) => res.json(await Device.find().sort({ lastSeenAt: -1 })));
-app.get("/admin/otps", async (_req, res) => res.json(await Otp.find().sort({ createdAt: -1 }).limit(100)));
-app.get("/admin/activity", async (_req, res) => res.json(await Activity.find().sort({ createdAt: -1 }).limit(300)));
-app.get("/admin/settings", async (_req, res) => {
+app.get("/admin/users", asyncRoute(async (_req, res) => res.json(await User.find().sort({ createdAt: -1 }))));
+app.get("/admin/licenses", asyncRoute(async (_req, res) => res.json(await License.find().sort({ updatedAt: -1 }))));
+app.get("/admin/devices", asyncRoute(async (_req, res) => res.json(await Device.find().sort({ lastSeenAt: -1 }))));
+app.get("/admin/otps", asyncRoute(async (_req, res) => res.json(await Otp.find().sort({ createdAt: -1 }).limit(100))));
+app.get("/admin/activity", asyncRoute(async (_req, res) => res.json(await Activity.find().sort({ createdAt: -1 }).limit(300))));
+app.get("/admin/settings", asyncRoute(async (_req, res) => {
   const settings = await Setting.findOne({ key: "platform" });
   res.json(settings || {
     trialPeriodDays: 60,
@@ -356,9 +382,9 @@ app.get("/admin/settings", async (_req, res) => {
     maintenanceMode: false,
     backupFrequency: "Daily",
   });
-});
+}));
 
-app.post("/admin/users", async (req, res) => {
+app.post("/admin/users", asyncRoute(async (req, res) => {
   const email = String(req.body.email || "").trim().toLowerCase();
   if (!email) return res.status(400).json({ message: "Email is required." });
   if (await User.findOne({ email })) return res.status(409).json({ message: "User already exists." });
@@ -397,9 +423,9 @@ app.post("/admin/users", async (req, res) => {
   });
   await logActivity(req.body.adminName || "Super Admin", "Admin created a user", email);
   res.json({ user: serializeUser(user), license });
-});
+}));
 
-app.patch("/admin/users/:id", async (req, res) => {
+app.patch("/admin/users/:id", asyncRoute(async (req, res) => {
   const patch = { ...req.body };
   delete patch.adminName;
   if (patch.password) {
@@ -412,9 +438,9 @@ app.patch("/admin/users/:id", async (req, res) => {
   const license = await licenseForUser(user);
   await logActivity(req.body.adminName || "Super Admin", "Admin edited user", user.email);
   res.json({ user: serializeUser(user), license });
-});
+}));
 
-app.delete("/admin/users/:id", async (req, res) => {
+app.delete("/admin/users/:id", asyncRoute(async (req, res) => {
   const user = await User.findById(req.params.id);
   if (!user) return res.status(404).json({ message: "User not found." });
   await User.deleteOne({ _id: user._id });
@@ -422,9 +448,9 @@ app.delete("/admin/users/:id", async (req, res) => {
   await Device.deleteMany({ userId: user._id });
   await logActivity(req.body?.adminName || "Super Admin", "Admin deleted a user and related cloud data", user.email);
   res.json({ ok: true });
-});
+}));
 
-app.patch("/admin/users/:id/subscription", async (req, res) => {
+app.patch("/admin/users/:id/subscription", asyncRoute(async (req, res) => {
   const user = await User.findById(req.params.id);
   if (!user) return res.status(404).json({ message: "User not found." });
   const baseDate = user.paidUntil || user.trialEndsAt || new Date();
@@ -442,9 +468,9 @@ app.patch("/admin/users/:id/subscription", async (req, res) => {
   );
   await logActivity(req.body.adminName || "Super Admin", `Admin changed subscription by ${days} days`, user.email);
   res.json({ user: serializeUser(user), license });
-});
+}));
 
-app.patch("/admin/licenses/:userId", async (req, res) => {
+app.patch("/admin/licenses/:userId", asyncRoute(async (req, res) => {
   const license = await License.findOneAndUpdate(
     { userId: req.params.userId },
     { ...req.body, updatedAt: new Date() },
@@ -452,20 +478,25 @@ app.patch("/admin/licenses/:userId", async (req, res) => {
   );
   await logActivity(req.body.adminName || "Super Admin", "Admin updated license", req.params.userId);
   res.json({ license });
-});
+}));
 
-app.delete("/admin/devices/:deviceId", async (req, res) => {
+app.delete("/admin/devices/:deviceId", asyncRoute(async (req, res) => {
   const device = await Device.findOneAndDelete({ deviceId: req.params.deviceId });
   await logActivity(req.body?.adminName || "Super Admin", "Admin removed registered device", device?.userId || req.params.deviceId);
   res.json({ ok: true });
-});
+}));
 
-app.put("/admin/settings", async (req, res) => {
+app.put("/admin/settings", asyncRoute(async (req, res) => {
   const payload = { ...req.body };
   delete payload.adminName;
   const settings = await Setting.findOneAndUpdate({ key: "platform" }, { key: "platform", ...payload }, { upsert: true, new: true });
   await logActivity(req.body.adminName || "Super Admin", "Updated system settings", "Platform Settings");
   res.json({ settings });
+}));
+
+app.use((error, _req, res, _next) => {
+  console.error("Cloud auth request failed:", error);
+  res.status(500).json({ message: error?.message || "Cloud authentication server error." });
 });
 
 console.log(`Connecting to MongoDB database "${mongoDbName}"...`);
