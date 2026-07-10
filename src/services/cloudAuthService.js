@@ -106,13 +106,18 @@ const getCloudPayload = (payload = {}) => ({
 });
 
 const requestCloud = async (path, options = {}) => {
+  const timeoutMs = Number(options.timeoutMs || 20000);
+  const { timeoutMs: _timeoutMs, ...fetchOptions } = options;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   const response = await fetch(`${CLOUD_AUTH_URL}${path}`, {
-    ...options,
+    ...fetchOptions,
+    signal: fetchOptions.signal || controller.signal,
     headers: {
       "Content-Type": "application/json",
-      ...(options.headers || {}),
+      ...(fetchOptions.headers || {}),
     },
-  });
+  }).finally(() => clearTimeout(timeoutId));
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new Error(data.message || "Cloud authentication request failed.");

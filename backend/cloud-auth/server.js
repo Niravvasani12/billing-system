@@ -170,6 +170,7 @@ const Setting = mongoose.model("Setting", settingsSchema);
 const hash = (value) => crypto.createHash("sha256").update(String(value)).digest("hex");
 const addDays = (days) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 const addDaysFrom = (date, days) => new Date(new Date(date).getTime() + days * 24 * 60 * 60 * 1000);
+const smtpTimeoutMs = Number(process.env.SMTP_TIMEOUT_MS || 10000);
 
 const sendOtpEmail = async (email, code, purpose) => {
   if (!nodemailer || !process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
@@ -181,18 +182,26 @@ const sendOtpEmail = async (email, code, purpose) => {
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT || 587),
     secure: process.env.SMTP_SECURE === "true",
+    connectionTimeout: smtpTimeoutMs,
+    greetingTimeout: smtpTimeoutMs,
+    socketTimeout: smtpTimeoutMs,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
   });
 
-  await transporter.sendMail({
-    from: process.env.SMTP_FROM || process.env.SMTP_USER,
-    to: email,
-    subject: `Vyaapar OS ${purpose === "signup" ? "Signup" : "Login"} OTP`,
-    text: `Your Vyaapar OS OTP is ${code}. It is valid for 10 minutes.`,
-  });
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to: email,
+      subject: `Vyaapar OS ${purpose === "signup" ? "Signup" : "Login"} OTP`,
+      text: `Your Vyaapar OS OTP is ${code}. It is valid for 10 minutes.`,
+    });
+  } catch (error) {
+    console.error(`Failed to send OTP email to ${email}:`, error);
+    return { sent: false, mode: "smtp-error", error: error?.message || "SMTP send failed" };
+  }
 
   return { sent: true, mode: "smtp" };
 };
@@ -284,7 +293,13 @@ app.get("/", (_req, res) => {
 });
 
 app.get("/health", (_req, res) => {
-  res.json({ ok: true, service: "vyapaaros-cloud-auth" });
+  res.json({
+    ok: true,
+    service: "vyapaaros-cloud-auth",
+    mongoConfigured: Boolean(process.env.MONGODB_URI),
+    smtpConfigured: Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS),
+    ownerConfigured: Boolean(ownerEmail && ownerPassword),
+  });
 });
 
 app.post("/auth/request-otp", asyncRoute(async (req, res) => {
