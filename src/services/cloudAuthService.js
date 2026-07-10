@@ -262,6 +262,8 @@ export const cloudAuth = {
           code: data.devOtp,
           purpose,
           status: "sent",
+          deliveryMode: data.deliveryMode,
+          deliveryError: data.deliveryError,
           createdAt: new Date().toISOString(),
           expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
         };
@@ -273,6 +275,7 @@ export const cloudAuth = {
         purpose,
         status: "sent",
         sentToEmail: true,
+        deliveryMode: data.deliveryMode,
       };
     } catch (error) {
       console.warn("Cloud OTP unavailable, using local OTP fallback.", error);

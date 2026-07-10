@@ -172,13 +172,12 @@ const addDays = (days) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 const addDaysFrom = (date, days) => new Date(new Date(date).getTime() + days * 24 * 60 * 60 * 1000);
 const smtpTimeoutMs = Number(process.env.SMTP_TIMEOUT_MS || 10000);
 
-const sendOtpEmail = async (email, code, purpose) => {
+const getSmtpTransporter = () => {
   if (!nodemailer || !process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log(`Development OTP for ${email}: ${code}`);
-    return { sent: false, mode: "development" };
+    return null;
   }
 
-  const transporter = nodemailer.createTransport({
+  return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT || 587),
     secure: process.env.SMTP_SECURE === "true",
@@ -190,6 +189,14 @@ const sendOtpEmail = async (email, code, purpose) => {
       pass: process.env.SMTP_PASS,
     },
   });
+};
+
+const sendOtpEmail = async (email, code, purpose) => {
+  const transporter = getSmtpTransporter();
+  if (!transporter) {
+    console.log(`Development OTP for ${email}: ${code}`);
+    return { sent: false, mode: "development", error: "SMTP is not configured on the server." };
+  }
 
   try {
     await transporter.sendMail({
@@ -302,6 +309,30 @@ app.get("/health", (_req, res) => {
   });
 });
 
+app.get("/health/smtp", asyncRoute(async (_req, res) => {
+  const transporter = getSmtpTransporter();
+  if (!transporter) {
+    return res.status(500).json({
+      ok: false,
+      mode: "development",
+      message: "SMTP is not configured on the server.",
+    });
+  }
+
+  try {
+    await transporter.verify();
+    return res.json({ ok: true, mode: "smtp", message: "SMTP connection verified." });
+  } catch (error) {
+    return res.status(500).json({
+      ok: false,
+      mode: "smtp-error",
+      message: error?.message || "SMTP verification failed.",
+      code: error?.code,
+      command: error?.command,
+    });
+  }
+}));
+
 app.post("/auth/request-otp", asyncRoute(async (req, res) => {
   const email = String(req.body.email || "").trim().toLowerCase();
   if (!email) return res.status(400).json({ message: "Email is required." });
@@ -313,7 +344,13 @@ app.post("/auth/request-otp", asyncRoute(async (req, res) => {
     expiresAt: new Date(Date.now() + 10 * 60 * 1000),
   });
   const delivery = await sendOtpEmail(email, code, req.body.purpose || "login");
-  res.json({ ok: true, sentToEmail: delivery.sent, devOtp: delivery.sent ? undefined : code });
+  res.json({
+    ok: true,
+    sentToEmail: delivery.sent,
+    deliveryMode: delivery.mode,
+    deliveryError: delivery.sent ? undefined : delivery.error,
+    devOtp: delivery.sent ? undefined : code,
+  });
 }));
 
 app.post("/auth/signup", asyncRoute(async (req, res) => {

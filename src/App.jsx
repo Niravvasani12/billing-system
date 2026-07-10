@@ -12,6 +12,8 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Update from "./pages/Update";
 import AdminPanel from "./pages/AdminPanel";
+import CashBank from "./pages/CashBank";
+import GST from "./pages/GST";
 import { useDispatch } from "react-redux";
 import logo from "./assets/VyaparOs.png";
 import { fetchCustomers, clearCustomers } from "./store/slices/customerSlice";
@@ -34,6 +36,8 @@ const pageMap = {
   dashboard: Dashboard,
   products: Products,
   reports: Reports,
+  "cash-bank": CashBank,
+  gst: GST,
   settings: Settings,
   update: Update,
   admin: AdminPanel,
@@ -110,6 +114,11 @@ function AuthScreen({ onAuthenticated }) {
   const [message, setMessage] = useState("");
 
   const updateForm = (patch) => setForm((prev) => ({ ...prev, ...patch }));
+  const getOtpMessage = (otp, successMessage) => {
+    if (!otp.code) return successMessage;
+    const reason = otp.deliveryError ? ` Email failed: ${otp.deliveryError}` : "";
+    return `${successMessage}${reason} Desktop test OTP: ${otp.code}`;
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -129,7 +138,7 @@ function AuthScreen({ onAuthenticated }) {
         try {
           const otp = await cloudAuth.requestOtp(email, "signup");
           setOtpState({ email, purpose: "signup", code: otp.code });
-          setMessage(otp.code ? `OTP sent to ${email}. Desktop test OTP: ${otp.code}` : `OTP sent to ${email}.`);
+          setMessage(getOtpMessage(otp, `OTP sent to ${email}.`));
         } catch (error) {
           setMessage(error.message);
         }
@@ -150,7 +159,7 @@ function AuthScreen({ onAuthenticated }) {
         try {
           const otp = await cloudAuth.requestOtp(email, "login");
           setOtpState({ email, purpose: "login" });
-          setMessage(otp.code ? `OTP sent for login. Desktop test OTP: ${otp.code}` : "OTP sent to your email.");
+          setMessage(getOtpMessage(otp, "OTP sent to your email."));
         } catch (error) {
           setMessage(error.message);
         }
@@ -410,6 +419,12 @@ export default function App() {
     }
     if (activePage.startsWith("inventory")) {
       return Inventory;
+    }
+    if (activePage.startsWith("cash-bank")) {
+      return CashBank;
+    }
+    if (activePage.startsWith("gst")) {
+      return GST;
     }
     return pageMap[activePage] || Dashboard;
   }, [activePage]);
